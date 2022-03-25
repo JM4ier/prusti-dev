@@ -22,13 +22,16 @@ impl<V: Clone> FixedSizeLinearHashMap<V> {
     }
 
     #[requires(128 <= storage.len())]
+    #[requires(storage.len() < 10000000)]
     #[ensures(result.inv())]
     pub fn from_storage(storage: Vector<Item<V>>) -> Self {
         let mut count = 0;
         let mut i = 0;
         while i < storage.len() {
-            if storage.index(i).is_entry() {
-                count += 1;
+            if i < storage.len() {
+                if storage.index(i).is_entry() {
+                    count += 1;
+                }
             }
             i += 1;
         }
