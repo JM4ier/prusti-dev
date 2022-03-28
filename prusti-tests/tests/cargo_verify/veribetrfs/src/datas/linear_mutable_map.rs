@@ -22,16 +22,15 @@ impl<V: Clone> FixedSizeLinearHashMap<V> {
     }
 
     #[requires(128 <= storage.len())]
-    #[requires(storage.len() < 10000000)]
     #[ensures(result.inv())]
     pub fn from_storage(storage: Vector<Item<V>>) -> Self {
         let mut count = 0;
         let mut i = 0;
         while i < storage.len() {
-            if i < storage.len() {
-                if storage.index(i).is_entry() {
-                    count += 1;
-                }
+            body_invariant!(i < storage.len());
+            body_invariant!(count <= i);
+            if storage.index(i).is_entry() {
+                count += 1;
             }
             i += 1;
         }
@@ -39,7 +38,14 @@ impl<V: Clone> FixedSizeLinearHashMap<V> {
     }
 
     #[requires(self.inv())]
+    #[pure]
+    pub fn capacity(&self) -> u64 {
+        self.storage.len()
+    }
+
+    #[requires(self.inv())]
     #[ensures(self.inv())]
+    #[ensures(result < self.capacity())]
     pub fn slot_for_key(&self, key: u64) -> u64 {
         let h = hash64(key);
         let len = self.storage.len();
