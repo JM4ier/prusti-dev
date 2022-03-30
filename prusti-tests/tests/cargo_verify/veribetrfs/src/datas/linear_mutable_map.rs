@@ -11,7 +11,7 @@ pub struct FixedSizeLinearHashMap<V> {
 impl<V: Clone> FixedSizeLinearHashMap<V> {
     #[pure]
     fn inv(&self) -> bool {
-        128 <= self.storage.len() && self.count < self.storage.len()
+        128 <= self.storage.len() && self.count <= self.storage.len()
     }
 
     #[requires(128 <= size)]
@@ -54,17 +54,8 @@ impl<V: Clone> FixedSizeLinearHashMap<V> {
 
     #[requires(self.inv())]
     #[ensures(self.inv())]
-    pub fn get_empty_witness(&self, i: u64) -> u64 {
-        let entry = self.storage.index(i);
-        match entry {
-            Empty => i,
-            _ => self.get_empty_witness(i + 1),
-        }
-    }
-
-    #[requires(self.inv())]
-    #[ensures(self.inv())]
-    pub fn probe(&self, key: u64) -> u64 {
+    #[ensures(result < self.storage.len())]
+    fn probe(&self, key: u64) -> u64 {
         let mut slot_idx = self.slot_for_key(key);
         let start_slot_idx = slot_idx;
         let mut done = false;
@@ -107,9 +98,10 @@ impl<V: Clone> FixedSizeLinearHashMap<V> {
         }
     }
 
+    #[requires(slot_idx < self.storage.len())]
     #[requires(self.inv())]
     #[ensures(self.inv())]
-    pub fn update_slot(&mut self, slot_idx: u64, value: V) {
+    fn update_slot(&mut self, slot_idx: u64, value: V) {
         let slot = self.storage.index_mut(slot_idx);
         match slot {
             Entry { key: _, value: val } => {

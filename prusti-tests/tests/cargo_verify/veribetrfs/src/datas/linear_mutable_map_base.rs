@@ -43,6 +43,7 @@ fn add(a: u64, b: u64) -> u64 {
 }
 
 #[pure]
+#[trusted]
 pub fn hash64(k: u64) -> u64 {
     let k0 = add(!k, k << 21);
     let k1 = k0 ^ (k0 >> 24);
