@@ -27,14 +27,14 @@ impl<T> Vector<T> {
         &self.0[idx as usize]
     }
 
-    #[trusted]
-    #[requires(idx < self.len())]
-    #[after_expiry(self.len() == old(self.len()))]
     //#[after_expiry(forall(|i: u64| 
     //    (i < self.len() && i != idx) 
     //    ==> 
     //    (self.index(i) == old(self.index(i)))
     //))]
+    #[trusted]
+    #[requires(idx < self.len())]
+    #[after_expiry(self.len() == old(self.len()))]
     pub fn index_mut(&mut self, idx: u64) -> &mut T {
         &mut self.0[idx as usize]
     }
