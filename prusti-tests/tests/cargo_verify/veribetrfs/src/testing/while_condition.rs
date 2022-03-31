@@ -1,4 +1,3 @@
-use prusti_contracts::*;
 use crate::base::*;
 
 fn while1() {
@@ -29,7 +28,7 @@ fn count_div2(vec: Vector<u32>) -> (Vector<u32>, u64) {
     while i < vec.len() {
         body_invariant!(i < vec.len());
         body_invariant!(count <= i);
-        if vec.index(i) % two == 0 {
+        if vec.index_(i) % two == 0 {
             count += 1;
         }
         i += 1;

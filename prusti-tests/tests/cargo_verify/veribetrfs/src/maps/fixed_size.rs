@@ -1,14 +1,12 @@
 use crate::base::*;
-use prusti_contracts::*;
+use super::base::*;
 
-use super::linear_mutable_map_base::*;
-
-pub struct FixedSizeLinearHashMap<V> {
-    storage: Vector<Item<V>>,
-    count: u64,
+pub struct FixedSizeHashMap<V> {
+    pub storage: Vector<Item<V>>,
+    pub count: u64,
 }
 
-impl<V: Clone> FixedSizeLinearHashMap<V> {
+impl<V: Clone> FixedSizeHashMap<V> {
     #[pure]
     fn inv(&self) -> bool {
         128 <= self.storage.len() && self.count <= self.storage.len()
@@ -66,14 +64,10 @@ impl<V: Clone> FixedSizeLinearHashMap<V> {
             match self.storage.index(slot_idx) {
                 Empty => done = true,
                 Tombstone { key } => {
-                    if *key == k {
-                        break;
-                    }
+                    done = *key == k;
                 }
                 Entry { key, .. } => {
-                    if *key == k {
-                        break;
-                    }
+                    done = *key == k;
                 }
                 _ => (),
             };
@@ -142,56 +136,3 @@ impl<V: Clone> FixedSizeLinearHashMap<V> {
     }
 }
 
-pub struct LinearHashMap<V> {
-    inner: FixedSizeLinearHashMap<V>,
-    count: u64,
-}
-
-impl<V: Clone> LinearHashMap<V> {
-    #[requires(128 <= size)]
-    pub fn with_size(size: u64) -> Self {
-        Self {
-            inner: FixedSizeLinearHashMap::with_size(size),
-            count: 0,
-        }
-    }
-
-    pub fn realloc(&mut self) {
-        let new_size = (128 + self.count) * 4;
-        let mut new_inner = FixedSizeLinearHashMap::with_size(new_size);
-
-        let mut i = 0;
-        while i < self.inner.storage.len() {
-            let item = self.inner.storage.index(i).clone();
-            if let Entry { key, value } = item {
-                new_inner.insert(key, value);
-            }
-            i += 1;
-        }
-
-        self.inner = new_inner;
-    }
-
-    pub fn insert(&mut self, key: u64, value: V) -> Opt<V> {
-        if self.inner.storage.len() / 2 < self.inner.count {
-            self.realloc();
-        }
-        let replaced = self.inner.insert(key, value);
-        if replaced.is_none() {
-            self.count += 1;
-        }
-        replaced
-    }
-
-    pub fn remove(&mut self, key: u64) -> Opt<V> {
-        let removed = self.inner.remove(key);
-        if removed.is_some() {
-            self.count -= 1;
-        }
-        removed
-    }
-
-    pub fn get(&self, key: u64) -> Opt<V> {
-        self.inner.get(key)
-    }
-}

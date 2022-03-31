@@ -1,4 +1,4 @@
-use prusti_contracts::*;
+use crate::base::*;
 
 #[derive(PartialEq, Eq)]
 pub struct Vector<T>(Vec<T>);
@@ -22,7 +22,7 @@ impl<T> Vector<T> {
 
     #[trusted]
     #[requires(idx < self.len())]
-    #[pure]
+    //#[pure]
     pub fn index(&self, idx: u64) -> &T {
         &self.0[idx as usize]
     }
@@ -30,11 +30,11 @@ impl<T> Vector<T> {
     #[trusted]
     #[requires(idx < self.len())]
     #[after_expiry(self.len() == old(self.len()))]
-    #[after_expiry(forall(|i: u64| 
-        (i < self.len() && i != idx) 
-        ==> 
-        (self.index(i) == old(self.index(i)))
-    ))]
+    //#[after_expiry(forall(|i: u64| 
+    //    (i < self.len() && i != idx) 
+    //    ==> 
+    //    (self.index(i) == old(self.index(i)))
+    //))]
     pub fn index_mut(&mut self, idx: u64) -> &mut T {
         &mut self.0[idx as usize]
     }
