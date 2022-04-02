@@ -3,7 +3,7 @@ use crate::base::*;
 #[derive(PartialEq, Eq)]
 pub struct Vector<T>(Vec<T>);
 
-impl<T> Vector<T> {
+impl<T: Eq> Vector<T> {
     #[trusted]
     #[ensures(result.len() == 0)]
     pub fn new() -> Self {
@@ -22,16 +22,23 @@ impl<T> Vector<T> {
 
     #[trusted]
     #[requires(idx < self.len())]
-    //#[pure]
+    #[ensures(result == self.lookup(idx))]
     pub fn index(&self, idx: u64) -> &T {
         &self.0[idx as usize]
     }
 
-    //#[after_expiry(forall(|i: u64| 
-    //    (i < self.len() && i != idx) 
-    //    ==> 
-    //    (self.index(i) == old(self.index(i)))
-    //))]
+    #[trusted]
+    #[requires(idx < self.len())]
+    #[pure]
+    pub fn lookup(&self, idx: u64) -> &T {
+        &self.0[idx as usize]
+    }
+
+    #[after_expiry(forall(|i: u64| 
+        (i < self.len() && i != idx) 
+        ==> 
+        (self.lookup(i) == old(self.lookup(i)))
+    ))]
     #[trusted]
     #[requires(idx < self.len())]
     #[after_expiry(self.len() == old(self.len()))]
@@ -40,7 +47,7 @@ impl<T> Vector<T> {
     }
 }
 
-impl<T: Clone> Vector<T> {
+impl<T: Clone + Eq> Vector<T> {
     #[trusted]
     #[ensures(result.len() == len)]
     pub fn init(init: T, len: u64) -> Self {

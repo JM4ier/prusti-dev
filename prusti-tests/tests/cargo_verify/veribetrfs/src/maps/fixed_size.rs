@@ -6,7 +6,7 @@ pub struct FixedSizeHashMap<V> {
     pub count: u64,
 }
 
-impl<V: Clone> FixedSizeHashMap<V> {
+impl<V: Clone + Eq> FixedSizeHashMap<V> {
     #[pure]
     fn inv(&self) -> bool {
         128 <= self.storage.len() && self.count <= self.storage.len()
@@ -22,17 +22,20 @@ impl<V: Clone> FixedSizeHashMap<V> {
     #[requires(128 <= storage.len())]
     #[ensures(result.inv())]
     pub fn from_storage(storage: Vector<Item<V>>) -> Self {
-        let mut count = 0;
-        let mut i = 0;
-        while i < storage.len() {
-            body_invariant!(i < storage.len());
-            body_invariant!(count <= i);
-            if storage.index(i).is_entry() {
-                count += 1;
-            }
-            i += 1;
-        }
+        let count = Self::count_entries(0, storage);
+        unreachable!();
         Self { storage, count }
+    }
+
+    #[requires(idx <= storage.len())]
+    #[ensures(idx + result <= storage.len())]
+    fn count_entries(idx: u64, storage: Vector<Item<V>>) -> u64 {
+        if idx == storage.len() {
+            0
+        } else {
+            let c = if storage.index(idx).is_entry() {1} else {0};
+            c + Self::count_entries(idx + 1, storage)
+        }
     }
 
     #[requires(self.inv())]
@@ -55,11 +58,11 @@ impl<V: Clone> FixedSizeHashMap<V> {
     #[ensures(result < self.storage.len())]
     fn probe(&self, key: u64) -> u64 {
         let mut slot_idx = self.slot_for_key(key);
-        let start_slot_idx = slot_idx;
         let mut done = false;
 
         while !done {
             body_invariant!(self.inv());
+            body_invariant!(slot_idx < self.storage.len());
             let k = key;
             match self.storage.index(slot_idx) {
                 Empty => done = true,
@@ -110,11 +113,14 @@ impl<V: Clone> FixedSizeHashMap<V> {
     pub fn remove(&mut self, key: u64) -> Opt<V> {
         let slot_idx = self.probe(key);
         let slot = self.storage.index_mut(slot_idx);
-        if slot.is_entry() {
-            let old = replace(slot, Tombstone { key });
+        if (&*slot).is_entry() {
+            let old = replace(slot, Tombstone{key});
             match old {
                 Entry { key: _, value } => {
-                    self.count -= 1;
+                    if self.count > 0 {
+                        // should always be the case
+                        self.count -= 1;
+                    }
                     Opt::Some(value)
                 }
                 _ => unreachable!(),

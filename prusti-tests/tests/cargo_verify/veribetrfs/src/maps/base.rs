@@ -1,6 +1,6 @@
 use prusti_contracts::*;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Item<V> {
     Empty,
     Entry { key: u64, value: V },
@@ -57,6 +57,7 @@ pub fn hash64(k: u64) -> u64 {
 
 #[requires(len > 0)]
 #[requires(slot < len)]
+#[ensures(result < len)]
 pub fn slot_succ(len: u64, slot: u64) -> u64 {
     if slot == len - 1 {
         0

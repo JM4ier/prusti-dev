@@ -7,7 +7,7 @@ pub struct HashMap<V> {
     count: u64,
 }
 
-impl<V: Clone> HashMap<V> {
+impl<V: Clone + Eq> HashMap<V> {
     #[requires(128 <= size)]
     pub fn with_size(size: u64) -> Self {
         Self {

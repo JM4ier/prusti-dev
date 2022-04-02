@@ -6,6 +6,7 @@ pub use vector::Vector;
 
 pub use prusti_contracts::*;
 
-pub fn replace<T>(dest: &mut T, src: T) -> T {
+//#[ensures(*dest == src && result == old(*dest))]
+pub fn replace<T: Eq>(dest: &mut T, src: T) -> T {
     std::mem::replace(dest, src)
 }
