@@ -78,6 +78,9 @@ impl<'p, 'v: 'p, 'tcx: 'v> Private for Lowerer<'p, 'v, 'tcx> {
                 let validity = conjuncts.into_iter().conjoin();
                 self.encode_validity_axioms_primitive(&domain_name, vir_low::Type::Int, validity)?;
             }
+            vir_mid::TypeDecl::Sequence(decl) => {
+                // TODO
+            }
             vir_mid::TypeDecl::Tuple(decl) => {
                 let mut parameters = Vec::new();
                 for field in decl.iter_fields() {
@@ -179,6 +182,9 @@ impl<'p, 'v: 'p, 'tcx: 'v> Private for Lowerer<'p, 'v, 'tcx> {
                     )?;
                 }
             }
+            vir_mid::TypeDecl::Map(map) => {
+                // TODO I'm not sure what to do here
+            }
             _ => unimplemented!("type: {:?}", type_decl),
         };
         Ok(())
@@ -243,7 +249,7 @@ pub(in super::super) trait TypesInterface {
 
 impl<'p, 'v: 'p, 'tcx: 'v> TypesInterface for Lowerer<'p, 'v, 'tcx> {
     fn ensure_type_definition(&mut self, ty: &vir_mid::Type) -> SpannedEncodingResult<()> {
-        if matches!(ty, vir_mid::Type::MBool | vir_mid::Type::MInt) {
+        if matches!(ty, vir_mid::Type::MBool | vir_mid::Type::MInt | vir_mid::Type::Map(_) | vir_mid::Type::Sequence(_)) {
             // Natively supported types, nothing to do.
             return Ok(());
         }
