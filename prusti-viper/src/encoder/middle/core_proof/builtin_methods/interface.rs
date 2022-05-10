@@ -1075,6 +1075,12 @@ impl<'p, 'v: 'p, 'tcx: 'v> BuiltinMethodsInterface for Lowerer<'p, 'v, 'tcx> {
                 vir_mid::TypeDecl::Array(_) => {
                     unimplemented!()
                 }
+                vir_mid::TypeDecl::Sequence(_) => {
+                    unimplemented!()
+                }
+                vir_mid::TypeDecl::Map(_) => {
+                    unimplemented!()
+                }
                 vir_mid::TypeDecl::Never => {
                     unimplemented!()
                 }
@@ -1292,7 +1298,8 @@ impl<'p, 'v: 'p, 'tcx: 'v> BuiltinMethodsInterface for Lowerer<'p, 'v, 'tcx> {
                 vir_mid::TypeDecl::Bool
                 | vir_mid::TypeDecl::Int(_)
                 | vir_mid::TypeDecl::Float(_)
-                | vir_mid::TypeDecl::Pointer(_) => {
+                | vir_mid::TypeDecl::Pointer(_)
+                | vir_mid::TypeDecl::Sequence(_) => {
                     self.encode_write_address_method(ty)?;
                     statements.push(stmtp! { position =>
                         call write_address<ty>([address.clone()], value)
@@ -1459,6 +1466,9 @@ impl<'p, 'v: 'p, 'tcx: 'v> BuiltinMethodsInterface for Lowerer<'p, 'v, 'tcx> {
                     }
                 }
                 vir_mid::TypeDecl::Array(_) => {
+                    unimplemented!()
+                }
+                vir_mid::TypeDecl::Map(_) => {
                     unimplemented!()
                 }
                 vir_mid::TypeDecl::Reference(_) => {
@@ -1899,7 +1909,8 @@ impl<'p, 'v: 'p, 'tcx: 'v> BuiltinMethodsInterface for Lowerer<'p, 'v, 'tcx> {
                             | vir_mid::TypeDecl::Int(_)
                             | vir_mid::TypeDecl::Float(_)
                             | vir_mid::TypeDecl::Reference(_)
-                            | vir_mid::TypeDecl::Pointer(_) => {
+                            | vir_mid::TypeDecl::Pointer(_)
+                            | vir_mid::TypeDecl::Sequence(_) => {
                                 // Primitive type. Nothing to do.
                             }
                             vir_mid::TypeDecl::TypeVar(_) => unreachable!("cannot convert abstract type into a generic: {}", ty),
@@ -2015,6 +2026,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> BuiltinMethodsInterface for Lowerer<'p, 'v, 'tcx> {
                                 }
                             }
                             vir_mid::TypeDecl::Array(_) => unimplemented!("ty: {}", ty),
+                            vir_mid::TypeDecl::Map(_) => unimplemented!("ty: {}", ty),
                             vir_mid::TypeDecl::Never => unimplemented!("ty: {}", ty),
                             vir_mid::TypeDecl::Closure(_) => unimplemented!("ty: {}", ty),
                             vir_mid::TypeDecl::Unsupported(_) => unimplemented!("ty: {}", ty),
