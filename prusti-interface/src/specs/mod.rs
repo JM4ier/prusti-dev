@@ -47,6 +47,7 @@ pub struct SpecCollector<'a, 'tcx: 'a> {
     /// Map from functions/loops and their specifications.
     procedure_specs: HashMap<LocalDefId, ProcedureSpecRefs>,
     loop_specs: Vec<LocalDefId>,
+    prusti_assertion_specs: Vec<LocalDefId>,
 }
 
 impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
@@ -59,6 +60,7 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
             spec_functions: HashMap::new(),
             procedure_specs: HashMap::new(),
             loop_specs: vec![],
+            prusti_assertion_specs: vec![],
         }
     }
 
@@ -268,6 +270,9 @@ impl<'a, 'tcx> intravisit::Visitor<'tcx> for SpecCollector<'a, 'tcx> {
             // Collect loop specifications
             if has_prusti_attr(attrs, "loop_body_invariant_spec") {
                 self.loop_specs.push(local_id);
+            }
+            if has_prusti_attr(attrs, "prusti_assertion_spec") {
+                self.prusti_assertion_specs.push(local_id);
             }
         } else {
             // Don't collect specs "for" spec items
