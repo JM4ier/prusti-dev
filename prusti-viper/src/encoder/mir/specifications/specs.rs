@@ -10,7 +10,8 @@ use prusti_interface::{
     environment::Environment,
     specs::typed::{
         DefSpecificationMap, LoopSpecification, ProcedureSpecification, ProcedureSpecificationKind,
-        ProcedureSpecificationKindError, Refinable, SpecificationItem,
+        ProcedureSpecificationKindError, PrustiAssertionSpecification, Refinable,
+        SpecificationItem,
     },
     PrustiError,
 };
@@ -72,6 +73,11 @@ impl<'tcx> Specifications<'tcx> {
     pub(super) fn get_loop_spec(&self, def_id: &DefId) -> Option<&LoopSpecification> {
         trace!("Get loop specs of {:?}", def_id);
         self.user_typed_specs.get_loop_spec(def_id)
+    }
+
+    pub(super) fn get_assert_spec(&self, def_id: &DefId) -> Option<&PrustiAssertionSpecification> {
+        trace!("Get loop specs of {:?}", def_id);
+        self.user_typed_specs.get_assert_spec(def_id)
     }
 
     pub(super) fn get_and_refine_proc_spec<'a, 'env: 'a>(

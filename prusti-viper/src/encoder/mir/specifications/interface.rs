@@ -89,6 +89,12 @@ pub(crate) trait SpecificationsInterface<'tcx> {
     /// `prusti::loop_body_invariant_spec` attribute.
     fn get_loop_specs(&self, def_id: DefId) -> Option<typed::LoopSpecification>;
 
+    /// Get the prusti assertion
+    fn get_prusti_assertion_specs(
+        &self,
+        def_id: DefId,
+    ) -> Option<typed::PrustiAssertionSpecification>;
+
     /// Get the specifications attached to a function.
     fn get_procedure_specs(
         &self,
@@ -178,6 +184,17 @@ impl<'v, 'tcx: 'v> SpecificationsInterface<'tcx> for super::super::super::Encode
             .specs
             .borrow()
             .get_loop_spec(&def_id)
+            .cloned()
+    }
+
+    fn get_prusti_assertion_specs(
+        &self,
+        def_id: DefId,
+    ) -> Option<typed::PrustiAssertionSpecification> {
+        self.specifications_state
+            .specs
+            .borrow()
+            .get_assert_spec(&def_id)
             .cloned()
     }
 

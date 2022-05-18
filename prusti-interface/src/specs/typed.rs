@@ -13,6 +13,7 @@ use rustc_span::Span;
 pub struct DefSpecificationMap {
     pub proc_specs: HashMap<DefId, SpecGraph<ProcedureSpecification>>,
     pub loop_specs: HashMap<DefId, LoopSpecification>,
+    pub prusti_assertion_specs: HashMap<DefId, PrustiAssertionSpecification>,
 }
 
 impl DefSpecificationMap {
@@ -26,6 +27,10 @@ impl DefSpecificationMap {
 
     pub fn get_proc_spec(&self, def_id: &DefId) -> Option<&SpecGraph<ProcedureSpecification>> {
         self.proc_specs.get(def_id)
+    }
+
+    pub fn get_assert_spec(&self, def_id: &DefId) -> Option<&PrustiAssertionSpecification> {
+        self.prusti_assertion_specs.get(def_id)
     }
 }
 
@@ -81,6 +86,11 @@ impl Display for ProcedureSpecificationKind {
 #[derive(Debug, Clone)]
 pub struct LoopSpecification {
     pub invariant: LocalDefId,
+}
+
+#[derive(Debug, Clone)]
+pub struct PrustiAssertionSpecification {
+    pub assertion: LocalDefId,
 }
 
 /// The base container to store a contract of a procedure.

@@ -70,6 +70,7 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
         self.determine_extern_specs(&mut def_spec);
         self.determine_loop_specs(&mut def_spec);
         self.determine_struct_specs(&mut def_spec);
+        self.determine_prusti_assertion_specs(&mut def_spec);
         // TODO: remove spec functions (make sure none are duplicated or left over)
 
         def_spec
@@ -156,6 +157,14 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
         for local_id in self.loop_specs.iter() {
             def_spec.loop_specs.insert(local_id.to_def_id(),typed::LoopSpecification {
                 invariant: *local_id,
+            });
+        }
+    }
+
+    fn determine_prusti_assertion_specs(&self, def_spec: &mut typed::DefSpecificationMap) {
+        for local_id in self.prusti_assertion_specs.iter() {
+            def_spec.prusti_assertion_specs.insert(local_id.to_def_id(),typed::PrustiAssertionSpecification {
+                assertion: *local_id,
             });
         }
     }

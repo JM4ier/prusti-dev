@@ -11,4 +11,11 @@ fn failing_assert() {
     body_invariant!(false);
 }
 
+fn loop_shouldnt_crash() {
+    loop {
+        prusti_assert!(true);
+        body_invariant!(true);
+    }
+}
+
 fn main() {}
