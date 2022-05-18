@@ -3,7 +3,9 @@
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../../../prusti_viper/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../../prusti_viper/index.html"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../../prusti_viper/index.html"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -127,130 +129,330 @@
 <span id="122">122</span>
 <span id="123">123</span>
 <span id="124">124</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#11-14"><span class="kw">crate</span>::encoder::mir::specifications::specs::Specifications</a>;
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#54-62"><span class="kw">crate</span>::encoder::mir::specifications::specs::Specifications</a>;
 <span class="kw">use</span> <span class="ident">log::trace</span>;
 <span class="kw">use</span> <span class="ident">prusti_interface</span>::{
-    <span class="ident">specs</span>::{<a class="ident" href="../../../../../prusti_interface/specs/typed/index.html">typed</a>, <a class="ident" href="../../../../../prusti_interface/specs/typed/struct.DefSpecificationMap.html">typed::DefSpecificationMap</a>},
+    <span class="ident">specs</span>::{
+        <a class="ident" href="../../../../../prusti_interface/specs/typed/index.html">typed</a>,
+        <span class="ident">typed</span>::{<a class="ident" href="../../../../../prusti_interface/specs/typed/struct.DefSpecificationMap.html">DefSpecificationMap</a>, <a class="ident" href="../../../../../prusti_interface/specs/typed/struct.ProcedureSpecification.html">ProcedureSpecification</a>, <a class="ident" href="../../../../../prusti_interface/specs/typed/enum.ProcedureSpecificationKind.html">ProcedureSpecificationKind</a>},
+    },
     <a class="ident" href="../../../../../prusti_interface/utils/fn.has_spec_only_attr.html">utils::has_spec_only_attr</a>,
 };
 <span class="kw">use</span> <span class="ident">rustc_hir::def_id</span>::{<a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.LocalDefId.html">LocalDefId</a>};
-<span class="kw">use</span> <a class="ident" href="https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html">std::cell::RefCell</a>;
+<span class="kw">use</span> <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_middle/ty/subst/type.SubstsRef.html">rustc_middle::ty::subst::SubstsRef</a>;
+<span class="kw">use</span> <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/span_encoding/struct.Span.html">rustc_span::Span</a>;
+<span class="kw">use</span> <span class="ident">std</span>::{<a class="ident" href="https://doc.rust-lang.org/nightly/core/cell/struct.RefCell.html">cell::RefCell</a>, <a class="ident" href="https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html">hash::Hash</a>};
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">SpecificationsState</span> {
-    <span class="ident">specs</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#11-14">Specifications</a><span class="op">&gt;</span>,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">SpecificationsState</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="ident">specs</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Specifications</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#10-12">SpecificationsState</a> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">SpecificationsState</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">user_typed_specs</span>: <a class="ident" href="../../../../../prusti_interface/specs/typed/struct.DefSpecificationMap.html">DefSpecificationMap</a>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">specs</span>: <span class="ident">RefCell::new</span>(<span class="ident">Specifications::new</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#15">user_typed_specs</a>)),
+            <span class="ident">specs</span>: <span class="ident">RefCell::new</span>(<span class="ident">Specifications::new</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#20">user_typed_specs</a>)),
         }
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait</span> <span class="ident">SpecificationsInterface</span> {
-    <span class="kw">fn</span> <span class="ident">is_pure</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">FunctionCallEncodingQuery</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="ident">called_def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+    <span class="kw">pub</span> <span class="ident">caller_def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+    <span class="kw">pub</span> <span class="ident">call_substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+}
 
-    <span class="kw">fn</span> <span class="ident">is_trusted</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum</span> <span class="ident">SpecQuery</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="ident">FunctionDefEncoding</span>(<a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>),
+    <span class="ident">FunctionCallEncoding</span>(<span class="ident">FunctionCallEncodingQuery</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// For determining the [ProcedureSpecificationKind] of a procedure, e.g.</span>
+    <span class="doccomment">/// for a check whether the function is pure or impure</span>
+    <span class="ident">GetProcKind</span>(<a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>),
+    <span class="ident">FetchSpan</span>(<a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>),
+}
 
-    <span class="kw">fn</span> <span class="ident">get_predicate_body</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.LocalDefId.html">LocalDefId</a><span class="op">&gt;</span>;
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="ident">SpecQuery</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">referred_def_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a> {
+        <span class="kw">match</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#45">self</a> {
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#36">SpecQuery::FunctionDefEncoding</a>(<span class="ident">def_id</span>, <span class="kw">_</span>)
+            <span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#37">SpecQuery::FunctionCallEncoding</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#28-32">FunctionCallEncodingQuery</a> {
+                <span class="ident">called_def_id</span>: <span class="ident">def_id</span>,
+                ..
+            })
+            <span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#40">SpecQuery::GetProcKind</a>(<span class="ident">def_id</span>, <span class="kw">_</span>)
+            <span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#41">SpecQuery::FetchSpan</a>(<span class="ident">def_id</span>) =&gt; <span class="kw-2">*</span><a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#47">def_id</a>,
+        }
+    }
 
-    <span class="kw">fn</span> <span class="ident">has_extern_spec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">adapt_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">new_substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="kw">use</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#35-42">SpecQuery</a>::<span class="kw-2">*</span>;
+        <span class="kw">match</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#57">self</a> {
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#36">FunctionDefEncoding</a>(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#36">FunctionDefEncoding</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#57">new_def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#57">new_substs</a>),
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#37">FunctionCallEncoding</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#28-32">FunctionCallEncodingQuery</a> { <span class="ident">caller_def_id</span>, .. }) =&gt; {
+                <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#37">FunctionCallEncoding</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#28-32">FunctionCallEncodingQuery</a> {
+                    <span class="ident">called_def_id</span>: <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#57">new_def_id</a>,
+                    <span class="ident">caller_def_id</span>: <span class="kw-2">*</span><a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#61">caller_def_id</a>,
+                    <span class="ident">call_substs</span>: <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#57">new_substs</a>,
+                })
+            }
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#40">GetProcKind</a>(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#40">GetProcKind</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#57">new_def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#57">new_substs</a>),
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#41">FetchSpan</a>(<span class="kw">_</span>) =&gt; <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#41">FetchSpan</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#57">new_def_id</a>),
+        }
+    }
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait</span> <span class="ident">SpecificationsInterface</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="comment">// TODO abstract-predicates: Maybe this should be deleted (and ProcedureSpecificationKind::is_pure)</span>
+    <span class="kw">fn</span> <span class="ident">is_pure</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">substs</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+
+    <span class="kw">fn</span> <span class="ident">get_proc_kind</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+        <span class="ident">substs</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) -&gt; <a class="ident" href="../../../../../prusti_interface/specs/typed/enum.ProcedureSpecificationKind.html">ProcedureSpecificationKind</a>;
+
+    <span class="kw">fn</span> <span class="ident">is_trusted</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">substs</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+
+    <span class="kw">fn</span> <span class="ident">get_predicate_body</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.LocalDefId.html">LocalDefId</a><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Get the loop invariant attached to a function with a</span>
     <span class="doccomment">/// `prusti::loop_body_invariant_spec` attribute.</span>
     <span class="kw">fn</span> <span class="ident">get_loop_specs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="../../../../../prusti_interface/specs/typed/struct.LoopSpecification.html">typed::LoopSpecification</a><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Get the specifications attached to the `def_id` function.</span>
-    <span class="kw">fn</span> <span class="ident">get_procedure_specs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="../../../../../prusti_interface/specs/typed/struct.ProcedureSpecification.html">typed::ProcedureSpecification</a><span class="op">&gt;</span>;
+    <span class="doccomment">/// Get the specifications attached to a function.</span>
+    <span class="kw">fn</span> <span class="ident">get_procedure_specs</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+        <span class="ident">substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="../../../../../prusti_interface/specs/typed/struct.ProcedureSpecification.html">typed::ProcedureSpecification</a><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Get a local wrapper `DefId` for functions that have external specs.</span>
-    <span class="doccomment">/// Return the original `DefId` for everything else.</span>
-    <span class="kw">fn</span> <span class="ident">get_wrapper_def_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>;
+    <span class="doccomment">/// Get the specifications attached to a function for a function call.</span>
+    <span class="kw">fn</span> <span class="ident">get_procedure_specs_for_call</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">called_def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+        <span class="ident">caller_def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+        <span class="ident">call_substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="../../../../../prusti_interface/specs/typed/struct.ProcedureSpecification.html">typed::ProcedureSpecification</a><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Is the closure specified with the `def_id` is spec only?</span>
+    <span class="doccomment">/// Is the closure specified with the `def_id` spec only?</span>
     <span class="kw">fn</span> <span class="ident">is_spec_closure</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+
+    <span class="doccomment">/// Get the span of the declared specification, if any, or else the span of</span>
+    <span class="doccomment">/// the method declaration.</span>
+    <span class="kw">fn</span> <span class="ident">get_spec_span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/span_encoding/struct.Span.html">Span</a>;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;v</span>, <span class="lifetime">&#39;tcx</span>: <span class="lifetime">&#39;v</span><span class="op">&gt;</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#22-44">SpecificationsInterface</a> <span class="kw">for</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::Encoder</span><span class="op">&lt;</span><span class="lifetime">&#39;v</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">is_pure</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a> {
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#47">self</a>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;v</span>, <span class="lifetime">&#39;tcx</span>: <span class="lifetime">&#39;v</span><span class="op">&gt;</span> <span class="ident">SpecificationsInterface</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::<span class="kw">super</span>::Encoder</span><span class="op">&lt;</span><span class="lifetime">&#39;v</span>, <span class="lifetime">&#39;tcx</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">is_pure</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">substs</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a> {
+        <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#116">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#78-82">get_proc_kind</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#116">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#116">substs</a>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pure</span> <span class="op">=</span> <span class="macro">matches!</span>(
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#117">kind</a>,
+            <span class="ident">ProcedureSpecificationKind::Pure</span> <span class="op">|</span> <span class="ident">ProcedureSpecificationKind::Predicate</span>(<span class="kw">_</span>)
+        );
+
+        <span class="kw">let</span> <span class="ident">func_name</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#116">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>().<span class="ident">get_unique_item_name</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#116">def_id</a>);
+        <span class="kw">if</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#123">func_name</a>.<span class="ident">starts_with</span>(<span class="string">&quot;prusti_contracts::prusti_contracts::Map&quot;</span>)
+            <span class="op">|</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#123">func_name</a>.<span class="ident">starts_with</span>(<span class="string">&quot;prusti_contracts::prusti_contracts::Seq&quot;</span>)
+        {
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#118">pure</a> <span class="op">=</span> <span class="bool-val">true</span>;
+        }
+
+        <span class="macro">trace!</span>(<span class="string">&quot;is_pure {:?} = {}&quot;</span>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#116">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#118">pure</a>);
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#118">pure</a>
+    }
+
+    <span class="kw">fn</span> <span class="ident">get_proc_kind</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+        <span class="ident">substs</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) -&gt; <a class="ident" href="../../../../../prusti_interface/specs/typed/enum.ProcedureSpecificationKind.html">ProcedureSpecificationKind</a> {
+        <span class="kw">let</span> <span class="ident">substs</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#137">substs</a>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#135">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>().<span class="ident">identity_substs</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#136">def_id</a>));
+        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#40">SpecQuery::GetProcKind</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#136">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#139">substs</a>);
+        <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#135">self</a>.<span class="ident">specifications_state</span>
+            .<span class="ident">specs</span>
+            .<span class="ident">borrow_mut</span>()
+            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#77-81">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#135">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#140">query</a>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">spec</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#145">spec</a>.<span class="ident">kind</span>)
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">kind</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#146">kind</a>.<span class="ident">extract_with_selective_replacement</span>().<span class="ident">copied</span>())
+            .<span class="ident">unwrap_or</span>(<span class="ident">ProcedureSpecificationKind::Impure</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">is_trusted</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">substs</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a> {
+        <span class="kw">let</span> <span class="ident">substs</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#150">substs</a>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#150">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>().<span class="ident">identity_substs</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#150">def_id</a>));
+        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#40">SpecQuery::GetProcKind</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#150">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#151">substs</a>);
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#150">self</a>
             .<span class="ident">specifications_state</span>
             .<span class="ident">specs</span>
             .<span class="ident">borrow_mut</span>()
-            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#38-42">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#47">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#209">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#47">def_id</a>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">spec</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#53">spec</a>.<span class="ident">pure</span>.<span class="ident">extract_inherit</span>())
+            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#77-81">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#150">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#152">query</a>)
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">spec</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#158">spec</a>.<span class="ident">trusted</span>.<span class="ident">extract_with_selective_replacement</span>().<span class="ident">copied</span>())
             .<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>);
-        <span class="macro">trace!</span>(<span class="string">&quot;is_pure {:?} = {}&quot;</span>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#47">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#48">result</a>);
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#48">result</a>
+        <span class="macro">trace!</span>(<span class="string">&quot;is_trusted {:?} = {}&quot;</span>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#152">query</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#153">result</a>);
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#153">result</a>
     }
 
-    <span class="kw">fn</span> <span class="ident">is_trusted</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a> {
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#59">self</a>
-            .<span class="ident">specifications_state</span>
-            .<span class="ident">specs</span>
-            .<span class="ident">borrow_mut</span>()
-            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#38-42">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#59">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#209">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#59">def_id</a>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">spec</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#65">spec</a>.<span class="ident">trusted</span>.<span class="ident">extract_with_selective_replacement</span>().<span class="ident">copied</span>())
-            .<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>);
-        <span class="macro">trace!</span>(<span class="string">&quot;is_trusted {:?} = {}&quot;</span>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#59">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#60">result</a>);
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#60">result</a>
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_predicate_body</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.LocalDefId.html">LocalDefId</a><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">specs</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#71">self</a>.<span class="ident">specifications_state</span>.<span class="ident">specs</span>.<span class="ident">borrow_mut</span>();
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#72">specs</a>
-            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#38-42">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#71">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#209">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#71">def_id</a>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">spec</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#75">spec</a>.<span class="ident">predicate_body</span>.<span class="ident">extract_with_selective_replacement</span>());
-        <span class="macro">trace!</span>(<span class="string">&quot;get_predicate_body {:?} = {:?}&quot;</span>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#71">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#73">result</a>);
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#73">result</a>.<span class="ident">cloned</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">has_extern_spec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a> {
-        <span class="comment">// FIXME: eventually, procedure specs (the entries in def_spec) should</span>
-        <span class="comment">// have an `is_extern_spec` field. For now, due to the way we handle</span>
-        <span class="comment">// MIR, extern specs create a wrapper function with a different DefId,</span>
-        <span class="comment">// so since we already have this remapping, it is enough to check if</span>
-        <span class="comment">// there is a wrapper present for the given external DefId.</span>
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#80">self</a>
-            .<span class="ident">specifications_state</span>
-            .<span class="ident">specs</span>
-            .<span class="ident">borrow</span>()
-            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#28">get_extern_spec_map</a>()
-            .<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#80">def_id</a>);
-        <span class="macro">trace!</span>(<span class="string">&quot;has_extern_spec {:?} = {}&quot;</span>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#80">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#86">result</a>);
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#86">result</a>
+    <span class="kw">fn</span> <span class="ident">get_predicate_body</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>, <span class="ident">substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.LocalDefId.html">LocalDefId</a><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#36">SpecQuery::FunctionDefEncoding</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#164">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#164">substs</a>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">specs</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#164">self</a>.<span class="ident">specifications_state</span>.<span class="ident">specs</span>.<span class="ident">borrow_mut</span>();
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#166">specs</a>
+            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#77-81">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#164">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#165">query</a>)
+            <span class="comment">// In case of error -&gt; It is emitted in get_and_refine_proc_spec</span>
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">spec</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#170">spec</a>.<span class="ident">kind</span>.<span class="ident">get_predicate_body</span>().<span class="ident">unwrap_or</span>(<span class="prelude-val">None</span>))
+            .<span class="ident">unwrap_or</span>(<span class="prelude-val">None</span>);
+        <span class="macro">trace!</span>(<span class="string">&quot;get_predicate_body {:?} = {:?}&quot;</span>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#165">query</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#167">result</a>);
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#167">result</a>.<span class="ident">cloned</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">get_loop_specs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="../../../../../prusti_interface/specs/typed/struct.LoopSpecification.html">typed::LoopSpecification</a><span class="op">&gt;</span> {
-        <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#96">self</a>.<span class="ident">specifications_state</span>
+        <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#176">self</a>.<span class="ident">specifications_state</span>
             .<span class="ident">specs</span>
             .<span class="ident">borrow</span>()
-            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#32">get_loop_spec</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#96">def_id</a>)
+            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#72">get_loop_spec</a>(<span class="kw-2">&amp;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#176">def_id</a>)
             .<span class="ident">cloned</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_procedure_specs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="../../../../../prusti_interface/specs/typed/struct.ProcedureSpecification.html">typed::ProcedureSpecification</a><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">specs</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#104">self</a>.<span class="ident">specifications_state</span>.<span class="ident">specs</span>.<span class="ident">borrow_mut</span>();
-        <span class="kw">let</span> <span class="ident">spec</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#105">specs</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#38-42">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#104">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#209">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#104">def_id</a>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#106">spec</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>())
+    <span class="kw">fn</span> <span class="ident">get_procedure_specs</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+        <span class="ident">substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="../../../../../prusti_interface/specs/typed/struct.ProcedureSpecification.html">typed::ProcedureSpecification</a><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#36">SpecQuery::FunctionDefEncoding</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#186">def_id</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#187">substs</a>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">specs</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#185">self</a>.<span class="ident">specifications_state</span>.<span class="ident">specs</span>.<span class="ident">borrow_mut</span>();
+        <span class="kw">let</span> <span class="ident">spec</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#190">specs</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#77-81">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#185">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#189">query</a>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#191">spec</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>())
     }
 
-    <span class="kw">fn</span> <span class="ident">get_wrapper_def_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a> {
-        <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#110">self</a>.<span class="ident">specifications_state</span>
-            .<span class="ident">specs</span>
-            .<span class="ident">borrow</span>()
-            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#28">get_extern_spec_map</a>()
-            .<span class="ident">get</span>(<span class="kw-2">&amp;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#110">def_id</a>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">local_id</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#116">local_id</a>.<span class="ident">to_def_id</span>())
-            .<span class="ident">unwrap_or</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#110">def_id</a>)
+    <span class="kw">fn</span> <span class="ident">get_procedure_specs_for_call</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">called_def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+        <span class="ident">caller_def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>,
+        <span class="ident">call_substs</span>: <span class="ident">SubstsRef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><a class="ident" href="../../../../../prusti_interface/specs/typed/struct.ProcedureSpecification.html">ProcedureSpecification</a><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#37">SpecQuery::FunctionCallEncoding</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#28-32">FunctionCallEncodingQuery</a> {
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#197">called_def_id</a>,
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#198">caller_def_id</a>,
+            <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#199">call_substs</a>,
+        });
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">specs</span> <span class="op">=</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#196">self</a>.<span class="ident">specifications_state</span>.<span class="ident">specs</span>.<span class="ident">borrow_mut</span>();
+        <span class="kw">let</span> <span class="ident">spec</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#206">specs</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#77-81">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#196">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#201">query</a>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#207">spec</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>())
     }
 
-    <span class="doccomment">/// Is the closure specified with the `def_id` is spec only?</span>
     <span class="kw">fn</span> <span class="ident">is_spec_closure</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a> {
-        <a class="ident" href="../../../../../prusti_interface/utils/fn.has_spec_only_attr.html">has_spec_only_attr</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#121">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#209">env</a>().<span class="ident">tcx</span>().<span class="ident">get_attrs</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#121">def_id</a>))
+        <a class="ident" href="../../../../../prusti_interface/utils/fn.has_spec_only_attr.html">has_spec_only_attr</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#211">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>().<span class="ident">get_attributes</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#211">def_id</a>))
+    }
+
+    <span class="kw">fn</span> <span class="ident">get_spec_span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">def_id</span>: <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/def_id/struct.DefId.html">DefId</a>) -&gt; <a class="ident" href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_span/span_encoding/struct.Span.html">Span</a> {
+        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#41">SpecQuery::FetchSpan</a>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#215">def_id</a>);
+        <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#215">self</a>.<span class="ident">specifications_state</span>
+            .<span class="ident">specs</span>
+            .<span class="ident">borrow_mut</span>()
+            .<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/specs.rs.html#77-81">get_and_refine_proc_spec</a>(<a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#215">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#216">query</a>)
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">spec</span><span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#221">spec</a>.<span class="ident">span</span>)
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <a class="self" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#215">self</a>.<a class="ident" href="../../../../../src/prusti_viper/encoder/encoder.rs.html#203">env</a>().<span class="ident">get_def_span</span>(<a class="ident" href="../../../../../src/prusti_viper/encoder/mir/specifications/interface.rs.html#215">def_id</a>))
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="prusti_viper" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (285fa7ecd 2022-03-14)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="prusti_viper" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (42e1761c7 2022-05-15)" ></div>
 </body></html>

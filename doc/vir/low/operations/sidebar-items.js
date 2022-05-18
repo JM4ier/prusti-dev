@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["constants",""],["expression",""],["helpers",""],["method",""],["statements",""],["ty",""]],"trait":[["ToLow",""],["ToLowLowerer",""]]});
+initSidebarItems({"mod":[["constants",""],["expression",""],["graphviz",""],["helpers",""],["method",""],["position",""],["special_variables",""],["statements",""],["successor",""],["ty",""]]});

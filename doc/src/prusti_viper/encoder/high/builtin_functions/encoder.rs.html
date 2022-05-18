@@ -3,7 +3,9 @@
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../../../prusti_viper/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../../prusti_viper/index.html"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../../prusti_viper/index.html"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -144,16 +146,16 @@
 <span id="139">139</span>
 <span id="140">140</span>
 <span id="141">141</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#25-50"><span class="kw">super</span>::interface::BuiltinFunctionHighKind</a>;
+</pre><pre class="rust"><code><span class="kw">use</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#28-53"><span class="kw">super</span>::interface::BuiltinFunctionHighKind</a>;
 <span class="kw">use</span> <span class="ident">vir_crate</span>::{
     <a class="ident" href="../../../../../vir/common/expression/trait.BinaryOperationHelpers.html">common::expression::BinaryOperationHelpers</a>,
     <span class="ident">high</span>::{<a class="self" href="../../../../../vir/high/index.html">self</a> <span class="kw">as</span> <span class="ident">vir_high</span>},
 };
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">encode_builtin_function_def</span>(<span class="ident">kind</span>: <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#25-50">BuiltinFunctionHighKind</a>) -&gt; <a class="ident" href="../../../../../vir/gen/high/ast/function/struct.FunctionDecl.html">vir_high::FunctionDecl</a> {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">encode_builtin_function_def</span>(<span class="ident">kind</span>: <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#28-53">BuiltinFunctionHighKind</a>) -&gt; <a class="ident" href="../../../../../vir/gen/high/ast/function/struct.FunctionDecl.html">vir_high::FunctionDecl</a> {
     <span class="kw">let</span> (<span class="ident">fn_name</span>, <span class="ident">type_arguments</span>) <span class="op">=</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#116-118">encode_builtin_function_name_with_type_args</a>(<span class="kw-2">&amp;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#7">kind</a>);
     <span class="kw">match</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#7">kind</a> {
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#27">BuiltinFunctionHighKind::Unreachable</a>(<span class="ident">ty</span>) =&gt; <a class="ident" href="../../../../../vir/gen/high/ast/function/struct.FunctionDecl.html">vir_high::FunctionDecl</a> {
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#30">BuiltinFunctionHighKind::Unreachable</a>(<span class="ident">ty</span>) =&gt; <a class="ident" href="../../../../../vir/gen/high/ast/function/struct.FunctionDecl.html">vir_high::FunctionDecl</a> {
             <span class="ident">name</span>: <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#8">fn_name</a>,
             <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#8">type_arguments</a>,
             <span class="ident">parameters</span>: <span class="macro">vec!</span>[],
@@ -163,7 +165,7 @@
             <span class="ident">posts</span>: <span class="macro">vec!</span>[],
             <span class="ident">body</span>: <span class="prelude-val">None</span>,
         },
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#29">BuiltinFunctionHighKind::Undefined</a>(<span class="ident">ty</span>) =&gt; <a class="ident" href="../../../../../vir/gen/high/ast/function/struct.FunctionDecl.html">vir_high::FunctionDecl</a> {
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#32">BuiltinFunctionHighKind::Undefined</a>(<span class="ident">ty</span>) =&gt; <a class="ident" href="../../../../../vir/gen/high/ast/function/struct.FunctionDecl.html">vir_high::FunctionDecl</a> {
             <span class="ident">name</span>: <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#8">fn_name</a>,
             <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#8">type_arguments</a>,
             <span class="ident">parameters</span>: <span class="macro">vec!</span>[],
@@ -172,7 +174,7 @@
             <span class="ident">posts</span>: <span class="macro">vec!</span>[],
             <span class="ident">body</span>: <span class="prelude-val">None</span>,
         },
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#32-37">BuiltinFunctionHighKind::ArrayLookupPure</a> {
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#35-40">BuiltinFunctionHighKind::ArrayLookupPure</a> {
             <span class="ident">array_pred_type</span>,
             <span class="ident">array_len</span>,
             <span class="ident">return_ty</span>,
@@ -200,13 +202,13 @@
                 <span class="ident">body</span>: <span class="prelude-val">None</span>,
             }
         }
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#40-44">BuiltinFunctionHighKind::SliceLookupPure</a> {
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#43-47">BuiltinFunctionHighKind::SliceLookupPure</a> {
             <span class="ident">slice_pred_type</span>,
             <span class="ident">elem_pred_type</span>,
             <span class="ident">return_ty</span>,
         } =&gt; {
             <span class="kw">let</span> (<span class="ident">slice_len</span>, <span class="ident">slice_len_type_arguments</span>) <span class="op">=</span>
-                <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#116-118">encode_builtin_function_name_with_type_args</a>(<span class="kw-2">&amp;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#46-49">BuiltinFunctionHighKind::SliceLen</a> {
+                <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#116-118">encode_builtin_function_name_with_type_args</a>(<span class="kw-2">&amp;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#49-52">BuiltinFunctionHighKind::SliceLen</a> {
                     <span class="ident">slice_pred_type</span>: <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#58">slice_pred_type</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>(),
                     <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#59">elem_pred_type</a>,
                 });
@@ -236,7 +238,7 @@
                 <span class="ident">body</span>: <span class="prelude-val">None</span>,
             }
         }
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#46-49">BuiltinFunctionHighKind::SliceLen</a> {
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#49-52">BuiltinFunctionHighKind::SliceLen</a> {
             <span class="ident">slice_pred_type</span>, ..
         } =&gt; {
             <span class="kw">let</span> <span class="ident">self_var</span> <span class="op">=</span> <span class="ident">vir_high::VariableDecl::new</span>(<span class="string">&quot;self&quot;</span>, <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#94">slice_pred_type</a>);
@@ -260,19 +262,19 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">encode_builtin_function_name_with_type_args</span>(
-    <span class="ident">kind</span>: <span class="kw-2">&amp;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#25-50">BuiltinFunctionHighKind</a>,
+    <span class="ident">kind</span>: <span class="kw-2">&amp;</span><a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#28-53">BuiltinFunctionHighKind</a>,
 ) -&gt; (<a class="ident" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html">String</a>, <span class="ident">Vec</span><span class="op">&lt;</span><a class="ident" href="../../../../../vir/gen/high/ast/ty/enum.Type.html">vir_high::Type</a><span class="op">&gt;</span>) {
     <span class="kw">match</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#117">kind</a> {
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#27">BuiltinFunctionHighKind::Unreachable</a>(<span class="ident">typ</span>) =&gt; {
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#30">BuiltinFunctionHighKind::Unreachable</a>(<span class="ident">typ</span>) =&gt; {
             (<span class="string">&quot;builtin$unreach&quot;</span>.<a class="ident" href="https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html">to_string</a>(), <span class="macro">vec!</span>[<a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#120">typ</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>()])
         }
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#29">BuiltinFunctionHighKind::Undefined</a>(<span class="ident">typ</span>) =&gt; (<span class="string">&quot;builtin$undef&quot;</span>.<a class="ident" href="https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html">to_string</a>(), <span class="macro">vec!</span>[<a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#123">typ</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>()]),
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#32-37">BuiltinFunctionHighKind::ArrayLookupPure</a> {
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#32">BuiltinFunctionHighKind::Undefined</a>(<span class="ident">typ</span>) =&gt; (<span class="string">&quot;builtin$undef&quot;</span>.<a class="ident" href="https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html">to_string</a>(), <span class="macro">vec!</span>[<a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#123">typ</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>()]),
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#35-40">BuiltinFunctionHighKind::ArrayLookupPure</a> {
             <span class="ident">array_pred_type</span>: <span class="ident">container_type</span>,
             <span class="ident">elem_pred_type</span>,
             ..
         }
-        <span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#40-44">BuiltinFunctionHighKind::SliceLookupPure</a> {
+        <span class="op">|</span> <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#43-47">BuiltinFunctionHighKind::SliceLookupPure</a> {
             <span class="ident">slice_pred_type</span>: <span class="ident">container_type</span>,
             <span class="ident">elem_pred_type</span>,
             ..
@@ -280,11 +282,11 @@
             <span class="string">&quot;lookup_pure&quot;</span>.<a class="ident" href="https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html">to_string</a>(),
             <span class="macro">vec!</span>[<a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#125">container_type</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>(), <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#126">elem_pred_type</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>()],
         ),
-        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#46-49">BuiltinFunctionHighKind::SliceLen</a> { <span class="ident">elem_pred_type</span>, .. } =&gt; {
+        <a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/interface.rs.html#49-52">BuiltinFunctionHighKind::SliceLen</a> { <span class="ident">elem_pred_type</span>, .. } =&gt; {
             (<span class="string">&quot;Slice$len&quot;</span>.<a class="ident" href="https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html">to_string</a>(), <span class="macro">vec!</span>[<a class="ident" href="../../../../../src/prusti_viper/encoder/high/builtin_functions/encoder.rs.html#137">elem_pred_type</a>.<a class="ident" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html">clone</a>()])
         }
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="prusti_viper" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (285fa7ecd 2022-03-14)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="prusti_viper" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (42e1761c7 2022-05-15)" ></div>
 </body></html>
