@@ -13,7 +13,7 @@ use rustc_span::Span;
 pub struct DefSpecificationMap {
     pub proc_specs: HashMap<DefId, SpecGraph<ProcedureSpecification>>,
     pub loop_specs: HashMap<DefId, LoopSpecification>,
-    pub prusti_assertion_specs: HashMap<DefId, PrustiAssertionSpecification>,
+    pub prusti_assertion_specs: HashMap<DefId, PrustiAssertion>,
 }
 
 impl DefSpecificationMap {
@@ -29,7 +29,7 @@ impl DefSpecificationMap {
         self.proc_specs.get(def_id)
     }
 
-    pub fn get_assert_spec(&self, def_id: &DefId) -> Option<&PrustiAssertionSpecification> {
+    pub fn get_assert_spec(&self, def_id: &DefId) -> Option<&PrustiAssertion> {
         self.prusti_assertion_specs.get(def_id)
     }
 }
@@ -89,7 +89,7 @@ pub struct LoopSpecification {
 }
 
 #[derive(Debug, Clone)]
-pub struct PrustiAssertionSpecification {
+pub struct PrustiAssertion {
     pub assertion: LocalDefId,
 }
 

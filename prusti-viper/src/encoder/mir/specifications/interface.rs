@@ -93,7 +93,7 @@ pub(crate) trait SpecificationsInterface<'tcx> {
     fn get_prusti_assertion_specs(
         &self,
         def_id: DefId,
-    ) -> Option<typed::PrustiAssertionSpecification>;
+    ) -> Option<typed::PrustiAssertion>;
 
     /// Get the specifications attached to a function.
     fn get_procedure_specs(
@@ -190,7 +190,7 @@ impl<'v, 'tcx: 'v> SpecificationsInterface<'tcx> for super::super::super::Encode
     fn get_prusti_assertion_specs(
         &self,
         def_id: DefId,
-    ) -> Option<typed::PrustiAssertionSpecification> {
+    ) -> Option<typed::PrustiAssertion> {
         self.specifications_state
             .specs
             .borrow()

@@ -163,7 +163,7 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
 
     fn determine_prusti_assertion_specs(&self, def_spec: &mut typed::DefSpecificationMap) {
         for local_id in self.prusti_assertion_specs.iter() {
-            def_spec.prusti_assertion_specs.insert(local_id.to_def_id(),typed::PrustiAssertionSpecification {
+            def_spec.prusti_assertion_specs.insert(local_id.to_def_id(),typed::PrustiAssertion {
                 assertion: *local_id,
             });
         }
