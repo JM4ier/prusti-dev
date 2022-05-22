@@ -1808,14 +1808,24 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     .get_definition_span(specification.assertion.to_def_id());
 
                 let assert_expr = self.encoder.set_expression_error_ctxt(
-                    todo!(),
+                    self.encoder
+                        .encode_invariant_high(self.mir, bb, self.def_id, cl_substs)?,
                     span,
                     ErrorCtxt::Assertion,
                     self.def_id,
                 );
 
                 let assert_stmt = vir_high::Statement::assert_no_pos(assert_expr);
+                let assert_stmt = self.encoder.set_statement_error_ctxt(
+                    assert_stmt,
+                    span,
+                    ErrorCtxt::Assertion,
+                    self.def_id,
+                )?;
+
                 encoded_statements.push(assert_stmt);
+
+                return Ok(true);
             }
         }
         Ok(false)
