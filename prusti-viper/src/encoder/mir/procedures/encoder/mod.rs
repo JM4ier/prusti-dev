@@ -1781,11 +1781,44 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         encoded_statements: &mut Vec<vir_high::Statement>,
     ) -> SpannedEncodingResult<()> {
         let block = &self.mir[bb];
-        if self.try_encode_specification_function_call(bb, block, encoded_statements)? {
+        if self.try_encode_assert(bb, block, encoded_statements)? {
+            Ok(())
+        } else if self.try_encode_specification_function_call(bb, block, encoded_statements)? {
             Ok(())
         } else {
             unreachable!()
         }
+    }
+
+    fn try_encode_assert(
+        &mut self,
+        bb: mir::BasicBlock,
+        block: &mir::BasicBlockData<'tcx>,
+        encoded_statements: &mut Vec<vir_high::Statement>,
+    ) -> SpannedEncodingResult<bool> {
+        for stmt in &block.statements {
+            if let mir::StatementKind::Assign(box (
+                _,
+                mir::Rvalue::Aggregate(box mir::AggregateKind::Closure(cl_def_id, cl_substs), _),
+            )) = stmt.kind
+            {
+                let specification = self.encoder.get_prusti_assertion_specs(cl_def_id).unwrap();
+                let span = self
+                    .encoder
+                    .get_definition_span(specification.assertion.to_def_id());
+
+                let assert_expr = self.encoder.set_expression_error_ctxt(
+                    todo!(),
+                    span,
+                    ErrorCtxt::Assertion,
+                    self.def_id,
+                );
+
+                let assert_stmt = vir_high::Statement::assert_no_pos(assert_expr);
+                encoded_statements.push(assert_stmt);
+            }
+        }
+        Ok(false)
     }
 
     fn try_encode_specification_function_call(
