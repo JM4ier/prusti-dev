@@ -36,12 +36,17 @@ fn implication(arg: i32) {
 //    prusti_assert!(forall(|x: u32| x == x));
 //}
 
-//fn loop_shouldnt_crash() {
-//    // FIXME: loop actually crashes
-//    loop {
-//        prusti_assert!(true);
-//        body_invariant!(true);
-//    }
-//}
+fn loop_shouldnt_crash() {
+    let mut i = 0;
+    let mut k = 30;
+    while i < 10 {
+        body_invariant!(i >= 0 && i < 10);
+        let old_i = i;
+        i += 1;
+        prusti_assert!(k > 0);
+        prusti_assert!(k < 100);
+        prusti_assert!(i > old_i);
+    }
+}
 
 fn main() {}

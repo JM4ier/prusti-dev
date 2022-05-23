@@ -1802,7 +1802,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 mir::Rvalue::Aggregate(box mir::AggregateKind::Closure(cl_def_id, cl_substs), _),
             )) = stmt.kind
             {
-                let specification = self.encoder.get_prusti_assertion_specs(cl_def_id).unwrap();
+                let specification = match self.encoder.get_prusti_assertion_specs(cl_def_id) {
+                    Some(spec) => spec,
+                    None => return Ok(false),
+                };
+
                 let span = self
                     .encoder
                     .get_definition_span(specification.assertion.to_def_id());
