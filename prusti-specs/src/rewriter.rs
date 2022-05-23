@@ -221,7 +221,7 @@ impl AstRewriter {
         Ok(quote_spanned! {expr.span()=>
             {
                 #[prusti::spec_only]
-                #[prusti::prusti_assertion_spec]
+                #[prusti::prusti_assertion]
                 #[prusti::spec_id = #spec_id_str]
                 || -> bool {
                     #expr

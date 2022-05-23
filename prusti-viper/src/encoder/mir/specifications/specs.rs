@@ -75,9 +75,9 @@ impl<'tcx> Specifications<'tcx> {
         self.user_typed_specs.get_loop_spec(def_id)
     }
 
-    pub(super) fn get_assert_spec(&self, def_id: &DefId) -> Option<&PrustiAssertion> {
+    pub(super) fn get_assertion(&self, def_id: &DefId) -> Option<&PrustiAssertion> {
         trace!("Get assertion specs of {:?}", def_id);
-        self.user_typed_specs.get_assert_spec(def_id)
+        self.user_typed_specs.get_assertion(def_id)
     }
 
     pub(super) fn get_and_refine_proc_spec<'a, 'env: 'a>(

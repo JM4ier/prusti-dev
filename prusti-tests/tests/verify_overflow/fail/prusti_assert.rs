@@ -40,7 +40,7 @@ fn loop_shouldnt_crash() {
     let mut i = 0;
     let mut k = 30;
     while i < 10 {
-        body_invariant!(i >= 0 && i < 10);
+        body_invariant!(i >= 0 && i < 10 && forall(|b: bool| b == b));
         let old_i = i;
         i += 1;
         prusti_assert!(k > 0);

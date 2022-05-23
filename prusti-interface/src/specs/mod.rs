@@ -47,7 +47,7 @@ pub struct SpecCollector<'a, 'tcx: 'a> {
     /// Map from functions/loops and their specifications.
     procedure_specs: HashMap<LocalDefId, ProcedureSpecRefs>,
     loop_specs: Vec<LocalDefId>,
-    prusti_assertion_specs: Vec<LocalDefId>,
+    prusti_assertions: Vec<LocalDefId>,
 }
 
 impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
@@ -60,7 +60,7 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
             spec_functions: HashMap::new(),
             procedure_specs: HashMap::new(),
             loop_specs: vec![],
-            prusti_assertion_specs: vec![],
+            prusti_assertions: vec![],
         }
     }
 
@@ -70,7 +70,7 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
         self.determine_extern_specs(&mut def_spec);
         self.determine_loop_specs(&mut def_spec);
         self.determine_struct_specs(&mut def_spec);
-        self.determine_prusti_assertion_specs(&mut def_spec);
+        self.determine_prusti_assertions(&mut def_spec);
         // TODO: remove spec functions (make sure none are duplicated or left over)
 
         def_spec
@@ -161,9 +161,9 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
         }
     }
 
-    fn determine_prusti_assertion_specs(&self, def_spec: &mut typed::DefSpecificationMap) {
-        for local_id in self.prusti_assertion_specs.iter() {
-            def_spec.prusti_assertion_specs.insert(local_id.to_def_id(),typed::PrustiAssertion {
+    fn determine_prusti_assertions(&self, def_spec: &mut typed::DefSpecificationMap) {
+        for local_id in self.prusti_assertions.iter() {
+            def_spec.prusti_assertions.insert(local_id.to_def_id(),typed::PrustiAssertion {
                 assertion: *local_id,
             });
         }
@@ -280,8 +280,8 @@ impl<'a, 'tcx> intravisit::Visitor<'tcx> for SpecCollector<'a, 'tcx> {
             if has_prusti_attr(attrs, "loop_body_invariant_spec") {
                 self.loop_specs.push(local_id);
             }
-            if has_prusti_attr(attrs, "prusti_assertion_spec") {
-                self.prusti_assertion_specs.push(local_id);
+            if has_prusti_attr(attrs, "prusti_assertion") {
+                self.prusti_assertions.push(local_id);
             }
         } else {
             // Don't collect specs "for" spec items

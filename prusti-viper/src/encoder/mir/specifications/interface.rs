@@ -90,7 +90,7 @@ pub(crate) trait SpecificationsInterface<'tcx> {
     fn get_loop_specs(&self, def_id: DefId) -> Option<typed::LoopSpecification>;
 
     /// Get the prusti assertion
-    fn get_prusti_assertion_specs(
+    fn get_prusti_assertion(
         &self,
         def_id: DefId,
     ) -> Option<typed::PrustiAssertion>;
@@ -187,14 +187,14 @@ impl<'v, 'tcx: 'v> SpecificationsInterface<'tcx> for super::super::super::Encode
             .cloned()
     }
 
-    fn get_prusti_assertion_specs(
+    fn get_prusti_assertion(
         &self,
         def_id: DefId,
     ) -> Option<typed::PrustiAssertion> {
         self.specifications_state
             .specs
             .borrow()
-            .get_assert_spec(&def_id)
+            .get_assertion(&def_id)
             .cloned()
     }
 
