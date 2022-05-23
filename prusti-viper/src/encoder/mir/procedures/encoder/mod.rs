@@ -4,7 +4,7 @@ use self::{
 };
 use super::MirProcedureEncoderInterface;
 use crate::encoder::{
-    errors::{ErrorCtxt, SpannedEncodingError, SpannedEncodingResult, WithSpan},
+    errors::{ErrorCtxt, PanicCause, SpannedEncodingError, SpannedEncodingResult, WithSpan},
     mir::{
         casts::CastsEncoderInterface,
         constants::ConstantsEncoderInterface,
@@ -1807,11 +1807,13 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     .encoder
                     .get_definition_span(specification.assertion.to_def_id());
 
+                let error_ctxt = ErrorCtxt::Panic(PanicCause::Assert);
+
                 let assert_expr = self.encoder.set_expression_error_ctxt(
                     self.encoder
                         .encode_invariant_high(self.mir, bb, self.def_id, cl_substs)?,
                     span,
-                    ErrorCtxt::Assertion,
+                    error_ctxt.clone(),
                     self.def_id,
                 );
 
@@ -1819,7 +1821,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 let assert_stmt = self.encoder.set_statement_error_ctxt(
                     assert_stmt,
                     span,
-                    ErrorCtxt::Assertion,
+                    error_ctxt,
                     self.def_id,
                 )?;
 

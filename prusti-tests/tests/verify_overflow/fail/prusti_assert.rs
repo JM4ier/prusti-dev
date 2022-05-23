@@ -9,7 +9,6 @@ fn assert1() {
 }
 
 fn failing_assert() {
-    // FIXME: prusti reports this as an internal error
     prusti_assert!(false); //~ ERROR
 }
 
