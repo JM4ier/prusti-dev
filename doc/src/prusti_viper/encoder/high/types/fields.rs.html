@@ -73,6 +73,8 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Helper functions for creating fields.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::encoder::errors</span>::{<a class="ident" href="../../../../../src/prusti_viper/encoder/errors/encoding_error.rs.html#15-18">EncodingError</a>, <a class="ident" href="../../../../../src/prusti_viper/encoder/errors/encoding_error.rs.html#20">EncodingResult</a>};
@@ -124,7 +126,8 @@
         <span class="op">|</span> <span class="ident">vir::Type::Never</span>
         <span class="op">|</span> <span class="ident">vir::Type::Str</span>
         <span class="op">|</span> <span class="ident">vir::Type::Projection</span>(<span class="kw">_</span>)
-        <span class="op">|</span> <span class="ident">vir::Type::Unsupported</span>(<span class="kw">_</span>) =&gt; {
+        <span class="op">|</span> <span class="ident">vir::Type::Unsupported</span>(<span class="kw">_</span>)
+        <span class="op">|</span> <span class="ident">vir::Type::Trusted</span>(<span class="kw">_</span>) =&gt; {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">EncodingError::unsupported</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;{} type is not supported&quot;</span>,
                 <a class="ident" href="../../../../../src/prusti_viper/encoder/high/types/fields.rs.html#8">ty</a>
@@ -135,6 +138,7 @@
         <span class="op">|</span> <span class="ident">vir::Type::MInt</span>
         <span class="op">|</span> <span class="ident">vir::Type::MFloat32</span>
         <span class="op">|</span> <span class="ident">vir::Type::MFloat64</span>
+        <span class="op">|</span> <span class="ident">vir::Type::MPerm</span>
         <span class="op">|</span> <span class="ident">vir::Type::Lifetime</span> =&gt; {
             <span class="macro">unreachable!</span>()
         }
