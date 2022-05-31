@@ -119,14 +119,15 @@ impl SpecificationBlocks {
         let mut ghost_blocks = BTreeSet::new();
         {
             let mut queue = Vec::new();
-            let mut ends = BTreeSet::new();
 
             for (bb, data) in rustc_middle::mir::traversal::reverse_postorder(body) {
                 if is_ghost_begin_marker(data, tcx) {
                     queue.push(bb);
                 }
                 if is_ghost_end_marker(data, tcx) {
-                    ends.insert(bb);
+                    // blocks that were already added to the ghost_blocks will not be visited again, 
+                    // hence the successor blocks of the ends will not be added to the ghost_block set
+                    ghost_blocks.insert(bb);
                 }
             }
 
@@ -135,9 +136,6 @@ impl SpecificationBlocks {
                     continue;
                 }
                 ghost_blocks.insert(bb);
-                if ends.contains(&bb) {
-                    continue;
-                }
                 let data = &body.basic_blocks()[bb];
                 // TODO ignore panic edges
                 for &succ in data.terminator.iter().flat_map(|t| t.successors()) {
