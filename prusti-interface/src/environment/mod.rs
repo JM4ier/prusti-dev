@@ -43,7 +43,7 @@ use self::collect_closure_defs_visitor::CollectClosureDefsVisitor;
 use rustc_hir::intravisit::Visitor;
 pub use self::loops::{PlaceAccess, PlaceAccessKind, ProcedureLoops};
 pub use self::loops_utils::*;
-pub use self::procedure::{BasicBlockIndex, Procedure, is_marked_specification_block, is_loop_invariant_block, get_loop_invariant};
+pub use self::procedure::{BasicBlockIndex, Procedure, is_marked_specification_block, is_loop_invariant_block, get_loop_invariant, is_ghost_begin_marker, is_ghost_end_marker};
 use self::borrowck::facts::BorrowckFacts;
 use crate::data::ProcedureDefId;
 use rustc_span::source_map::SourceMap;

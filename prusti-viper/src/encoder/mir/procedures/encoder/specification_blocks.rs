@@ -1,5 +1,6 @@
 use prusti_interface::environment::{
-    is_loop_invariant_block, is_marked_specification_block, Procedure,
+    is_ghost_begin_marker, is_ghost_end_marker, is_loop_invariant_block,
+    is_marked_specification_block, Procedure,
 };
 use rustc_data_structures::graph::WithSuccessors;
 use rustc_middle::{mir, ty::TyCtxt};
@@ -11,6 +12,7 @@ pub(super) struct SpecificationBlocks {
     specification_blocks: BTreeSet<mir::BasicBlock>,
     /// Blocks through which specifications are entered.
     specification_entry_blocks: BTreeSet<mir::BasicBlock>,
+    ghost_blocks: BTreeSet<mir::BasicBlock>,
     /// A set of blocks containing the loop invariant of a given loop in
     /// execution order.
     ///
@@ -111,10 +113,44 @@ impl SpecificationBlocks {
             }
         }
 
+        // collect ghost blocks
+        // ghost blocks are all the blocks that are reachable from a block containing a ghost_begin marking
+        // without going through the corresponding ghost_end marking
+        let mut ghost_blocks = BTreeSet::new();
+        {
+            let mut queue = Vec::new();
+            let mut ends = BTreeSet::new();
+
+            for (bb, data) in rustc_middle::mir::traversal::reverse_postorder(body) {
+                if is_ghost_begin_marker(data, tcx) {
+                    queue.push(bb);
+                }
+                if is_ghost_end_marker(data, tcx) {
+                    ends.insert(bb);
+                }
+            }
+
+            while let Some(bb) = queue.pop() {
+                if ghost_blocks.contains(&bb) {
+                    continue;
+                }
+                ghost_blocks.insert(bb);
+                if ends.contains(&bb) {
+                    continue;
+                }
+                let data = &body.basic_blocks()[bb];
+                // TODO ignore panic edges
+                for &succ in data.terminator.iter().flat_map(|t| t.successors()) {
+                    queue.push(succ);
+                }
+            }
+        }
+
         Self {
             specification_blocks,
             specification_entry_blocks,
             loop_invariant_blocks,
+            ghost_blocks,
         }
     }
 
@@ -124,6 +160,10 @@ impl SpecificationBlocks {
 
     pub(super) fn is_specification_block(&self, bb: mir::BasicBlock) -> bool {
         self.specification_blocks.contains(&bb)
+    }
+
+    pub(super) fn is_ghost_block(&self, bb: mir::BasicBlock) -> bool {
+        self.ghost_blocks.contains(&bb)
     }
 
     pub(super) fn loop_invariant_blocks(&self) -> &BTreeMap<mir::BasicBlock, LoopInvariantBlocks> {
