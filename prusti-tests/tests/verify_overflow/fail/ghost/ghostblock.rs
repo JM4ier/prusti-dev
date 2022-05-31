@@ -8,4 +8,10 @@ fn empty_ghost_block() {
     ghost! {}
 }
 
+fn return_disallowed() {
+    ghost! {
+        return; //~ ERROR:
+    }
+}
+
 fn main() {}

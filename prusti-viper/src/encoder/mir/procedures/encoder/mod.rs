@@ -1897,6 +1897,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         if false
             || self.try_encode_assert(bb, block, encoded_statements)?
             || self.try_encode_assume(bb, block, encoded_statements)?
+            || self.try_encode_ghost_markers(bb, block, encoded_statements)?
             || self.try_encode_specification_function_call(bb, block, encoded_statements)?
         {
             Ok(())
@@ -1992,6 +1993,26 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 encoded_statements.push(stmt);
 
                 return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    fn try_encode_ghost_markers(
+        &mut self,
+        _bb: mir::BasicBlock,
+        block: &mir::BasicBlockData<'tcx>,
+        _encoded_statements: &mut Vec<vir_high::Statement>,
+    ) -> SpannedEncodingResult<bool> {
+        for stmt in &block.statements {
+            if let mir::StatementKind::Assign(box (
+                _,
+                mir::Rvalue::Aggregate(box mir::AggregateKind::Closure(cl_def_id, cl_substs), _),
+            )) = stmt.kind
+            {
+                let is_begin = self.encoder.get_ghost_begin(cl_def_id).is_some();
+                let is_end = self.encoder.get_ghost_end(cl_def_id).is_some();
+                return Ok(is_begin || is_end);
             }
         }
         Ok(false)
