@@ -4,7 +4,7 @@ use self::{
 };
 use super::MirProcedureEncoderInterface;
 use crate::encoder::{
-    errors::{ErrorCtxt, PanicCause, SpannedEncodingResult, WithSpan},
+    errors::{ErrorCtxt, PanicCause, SpannedEncodingResult, WithSpan, SpannedEncodingError},
     mir::{
         casts::CastsEncoderInterface,
         constants::ConstantsEncoderInterface,
@@ -1719,6 +1719,22 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 .insert(invariant_location, statement);
         }
 
+        // Check that ghost blocks don't transfer control flow outside
+        for &bb in self.specification_blocks.ghost_blocks() {
+            let data = &self.mir.basic_blocks()[bb];
+            for term in data.terminator.iter() {
+                match term.kind {
+                    rustc_middle::mir::TerminatorKind::Return => {
+                        Err(SpannedEncodingError::incorrect(
+                            "ghost code might trigger non-ghost code",
+                            self.procedure.get_span(),
+                        ))?
+                    }
+                    _ => (),
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -1732,6 +1748,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         if false
             || self.try_encode_assert(bb, block, encoded_statements)?
             || self.try_encode_assume(bb, block, encoded_statements)?
+            || self.try_encode_ghost_markers(bb, block, encoded_statements)?
             || self.try_encode_specification_function_call(bb, block, encoded_statements)?
         {
             Ok(())
@@ -1827,6 +1844,26 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 encoded_statements.push(stmt);
 
                 return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    fn try_encode_ghost_markers(
+        &mut self,
+        _bb: mir::BasicBlock,
+        block: &mir::BasicBlockData<'tcx>,
+        _encoded_statements: &mut Vec<vir_high::Statement>,
+    ) -> SpannedEncodingResult<bool> {
+        for stmt in &block.statements {
+            if let mir::StatementKind::Assign(box (
+                _,
+                mir::Rvalue::Aggregate(box mir::AggregateKind::Closure(cl_def_id, cl_substs), _),
+            )) = stmt.kind
+            {
+                let is_begin = self.encoder.get_ghost_begin(cl_def_id).is_some();
+                let is_end = self.encoder.get_ghost_end(cl_def_id).is_some();
+                return Ok(is_begin || is_end);
             }
         }
         Ok(false)
