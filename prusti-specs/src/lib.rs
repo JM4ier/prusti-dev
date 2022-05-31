@@ -21,7 +21,7 @@ mod type_model;
 mod user_provided_type_params;
 
 use proc_macro2::{Span, TokenStream, TokenTree};
-use quote::{quote_spanned, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use rewriter::AstRewriter;
 use std::convert::TryInto;
 use syn::spanned::Spanned;
@@ -619,5 +619,34 @@ pub fn type_model(attr: TokenStream, tokens: TokenStream) -> TokenStream {
             "Only structs can be attributed with a type model",
         )
         .to_compile_error(),
+    }
+}
+
+pub fn ghost(tokens: TokenStream) -> TokenStream {
+    let mut rewriter = rewriter::AstRewriter::new();
+    let callsite_span = Span::call_site();
+
+    let spec_id = rewriter.generate_spec_id();
+    let spec_id_str = spec_id.to_string();
+
+    let make_closure = |kind| {
+        quote! {
+            #[allow(unused_must_use, unused_variables, unused_braces, unused_parens)]
+            if false {
+                #[prusti::spec_only]
+                #[prusti::#kind]
+                #[prusti::spec_id = #spec_id_str]
+                || -> () {};
+            }
+        }
+    };
+
+    let begin = make_closure(quote! {ghost_begin});
+    let end = make_closure(quote! {ghost_end});
+
+    quote_spanned! {callsite_span=>
+        #begin
+        #tokens
+        #end
     }
 }
