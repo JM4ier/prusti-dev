@@ -4,7 +4,7 @@ use self::{
 };
 use super::MirProcedureEncoderInterface;
 use crate::encoder::{
-    errors::{ErrorCtxt, PanicCause, SpannedEncodingResult, WithSpan},
+    errors::{ErrorCtxt, PanicCause, SpannedEncodingResult, WithSpan, SpannedEncodingError},
     mir::{
         casts::CastsEncoderInterface,
         constants::ConstantsEncoderInterface,
@@ -1882,6 +1882,22 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 self.encode_loop_invariant(*loop_head, invariant_location, specification_blocks)?;
             self.loop_invariant_encoding
                 .insert(invariant_location, statement);
+        }
+
+        // Check that ghost blocks don't transfer control flow outside
+        for &bb in self.specification_blocks.ghost_blocks() {
+            let data = &self.mir.basic_blocks()[bb];
+            for term in data.terminator.iter() {
+                match term.kind {
+                    rustc_middle::mir::TerminatorKind::Return => {
+                        Err(SpannedEncodingError::incorrect(
+                            "ghost code might trigger non-ghost code",
+                            self.procedure.get_span(),
+                        ))?
+                    }
+                    _ => (),
+                }
+            }
         }
 
         Ok(())

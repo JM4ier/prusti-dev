@@ -9,9 +9,27 @@ fn empty_ghost_block() {
 }
 
 fn return_disallowed() {
+    //~ ERROR: ghost code might trigger non-ghost code
     ghost! {
-        // FIXME: currently this causes a panic, need to figure out how to make this a normal error
-        return; //~ ERROR:
+        return;
+    }
+}
+
+fn break_disallowed() {
+    //~ ERROR: ghost code might trigger non-ghost code
+    while true {
+        ghost! {
+            break;
+        }
+    }
+}
+
+fn continue_disallowed() {
+    //~ ERROR: ghost code might trigger non-ghost code
+    while true {
+        ghost! {
+            continue;
+        }
     }
 }
 

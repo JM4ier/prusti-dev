@@ -148,15 +148,6 @@ impl SpecificationBlocks {
                     for &succ in data.terminator.iter().flat_map(|t| t.successors()) {
                         queue.push(succ);
                     }
-                    for term in data.terminator.iter() {
-                        match term.kind {
-                            // FIXME: check this somewhere else and don't panic here
-                            rustc_middle::mir::TerminatorKind::Return => {
-                                panic!("Leaky Ghost block")
-                            }
-                            _ => (),
-                        }
-                    }
                 }
             }
         }
@@ -183,5 +174,9 @@ impl SpecificationBlocks {
 
     pub(super) fn loop_invariant_blocks(&self) -> &BTreeMap<mir::BasicBlock, LoopInvariantBlocks> {
         &self.loop_invariant_blocks
+    }
+
+    pub(super) fn ghost_blocks(&self) -> &BTreeSet<mir::BasicBlock> {
+        &self.ghost_blocks
     }
 }
