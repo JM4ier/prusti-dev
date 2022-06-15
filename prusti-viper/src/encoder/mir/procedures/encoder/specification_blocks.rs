@@ -125,8 +125,6 @@ impl SpecificationBlocks {
                     queue.push(bb);
                 }
                 if is_ghost_end_marker(data, tcx) {
-                    // blocks that were already added to the ghost_blocks will not be visited again, 
-                    // hence the successor blocks of the ends will not be added to the ghost_block set
                     ghost_blocks.insert(bb);
                 }
             }
@@ -135,11 +133,30 @@ impl SpecificationBlocks {
                 if ghost_blocks.contains(&bb) {
                     continue;
                 }
-                ghost_blocks.insert(bb);
                 let data = &body.basic_blocks()[bb];
-                // TODO ignore panic edges
-                for &succ in data.terminator.iter().flat_map(|t| t.successors()) {
-                    queue.push(succ);
+                ghost_blocks.insert(bb);
+
+                // end marker is only conditionally reachable, as it is inside an `if false {}`
+                // However, if a block has the end marker as successor, the other successors will be outside the ghost block, and shall be ignored.
+                let before_end = data
+                    .terminator
+                    .iter()
+                    .flat_map(|t| t.successors())
+                    .any(|bb| is_ghost_end_marker(&body.basic_blocks()[*bb], tcx));
+
+                if !before_end {
+                    for &succ in data.terminator.iter().flat_map(|t| t.successors()) {
+                        queue.push(succ);
+                    }
+                    for term in data.terminator.iter() {
+                        match term.kind {
+                            // FIXME: check this somewhere else and don't panic here
+                            rustc_middle::mir::TerminatorKind::Return => {
+                                panic!("Leaky Ghost block")
+                            }
+                            _ => (),
+                        }
+                    }
                 }
             }
         }

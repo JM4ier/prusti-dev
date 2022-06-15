@@ -10,6 +10,7 @@ fn empty_ghost_block() {
 
 fn return_disallowed() {
     ghost! {
+        // FIXME: currently this causes a panic, need to figure out how to make this a normal error
         return; //~ ERROR:
     }
 }
