@@ -1802,6 +1802,10 @@ dependencies = [
 [[package]]
 name = "prusti-contracts-impl"
 version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "prusti-contracts-internal"

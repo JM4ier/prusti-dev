@@ -99,15 +99,26 @@ impl<'v, 'tcx: 'v> SpecificationEncoderInterface<'tcx> for crate::encoder::Encod
         parent_def_id: DefId,
         substs: SubstsRef<'tcx>,
     ) -> SpannedEncodingResult<vir_high::Expression> {
+        let fn_name = fn_name
+            .strip_prefix("prusti_contracts::")
+            .expect("unhandled prusti functions");
         match fn_name {
-            "prusti_contracts::forall" | "prusti_contracts::exists" => encode_quantifier_high(
+            "forall" | "exists" => encode_quantifier_high(
                 self,
                 span,
                 encoded_args,
-                fn_name == "prusti_contracts::exists",
+                fn_name == "exists",
                 parent_def_id,
                 substs,
             ),
+            "snapshot_equality" => {
+                assert_eq!(encoded_args.len(), 2);
+                Ok(vir_high::Expression::binary_op_no_pos(
+                    vir_high::BinaryOpKind::EqCmp,
+                    encoded_args[0].clone(),
+                    encoded_args[1].clone(),
+                ))
+            }
             _ => unimplemented!(),
         }
     }

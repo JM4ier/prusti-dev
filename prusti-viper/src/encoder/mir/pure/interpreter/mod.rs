@@ -577,6 +577,12 @@ impl<'p, 'v: 'p, 'tcx: 'v> ExpressionBackwardInterpreter<'p, 'v, 'tcx> {
                 "new" => builtin((NewInt, Type::Int(Int::Unbounded))),
                 _ => unreachable!("no further int functions"),
             };
+        } else if let Some(proc_name) = proc_name.strip_prefix("prusti_contracts::GetSet::") {
+            return match proc_name {
+                "get" => subst_with(encoded_args[0].clone()),
+                "set" => unimplemented!(),
+                _ => unreachable!(),
+            }
         }
 
         // replace all the operations on Ints
@@ -714,7 +720,8 @@ impl<'p, 'v: 'p, 'tcx: 'v> ExpressionBackwardInterpreter<'p, 'v, 'tcx> {
             "prusti_contracts::exists"
             | "prusti_contracts::forall"
             | "prusti_contracts::specification_entailment"
-            | "prusti_contracts::call_description" => {
+            | "prusti_contracts::call_description"
+            | "prusti_contracts::snapshot_equality" => {
                 let expr = self.encoder.encode_prusti_operation_high(
                     proc_name,
                     span,

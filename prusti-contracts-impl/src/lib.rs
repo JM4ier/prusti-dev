@@ -2,6 +2,7 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 
 #[proc_macro_attribute]
 pub fn requires(_attr: TokenStream, tokens: TokenStream) -> TokenStream {
@@ -79,6 +80,28 @@ pub fn ghost_constraint(_attr: TokenStream, _tokens: TokenStream) -> TokenStream
 }
 
 #[proc_macro]
-pub fn ghost(_tokens: TokenStream) -> TokenStream {
-    TokenStream::new()
+pub fn ghost(tokens: TokenStream) -> TokenStream {
+    let tokens: TokenStream2 = tokens.into();
+    quote::quote! {{
+        use prusti_contracts::*;
+
+        trait GhostGetter<T> {
+            fn get(self) -> T;
+            fn set(self, t: T);
+        }
+        impl<T> GhostGetter<T> for Ghost<T> {
+            fn get(self) -> T {
+                panic!();
+            }
+            fn set(self, t: T) {
+                panic!()
+            }
+        }
+
+        let ghost_closure = || {
+            #tokens
+        };
+        unsafe{Ghost::unsafe_new(&ghost_closure)}
+    }}
+    .into()
 }

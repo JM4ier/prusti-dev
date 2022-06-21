@@ -24,7 +24,7 @@ use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned, ToTokens};
 use rewriter::AstRewriter;
 use std::convert::TryInto;
-use syn::spanned::Spanned;
+use syn::{spanned::Spanned, token::Token};
 
 use crate::{
     common::{merge_generics, RewritableReceiver, SelfTypeRewriter},
@@ -644,16 +644,18 @@ pub fn ghost(tokens: TokenStream) -> TokenStream {
     let begin = make_closure(quote! {ghost_begin});
     let end = make_closure(quote! {ghost_end});
 
+    let type_annot = match tokens.clone().into_iter().last() {
+        Some(TokenTree::Punct(p)) if p.as_char() == ';' => quote! {()},
+        _ => quote! {_},
+    };
+
     quote_spanned! {callsite_span=>
         {
+            use prusti_contracts::*;
             #begin
-            let ghost_closure = || {
-                #tokens
-            };
-            let ghost_closure_ref: &dyn Fn() -> _ = &ghost_closure;
-            let ghost_result = {#tokens};
+            let block_result: #type_annot = { #tokens };
             #end
-            ghost_result
+            block_result
         }
     }
 }

@@ -71,6 +71,28 @@ mod private {
         _phantom: core::marker::PhantomData<T>,
     }
 
+    #[non_exhaustive]
+    #[derive(PartialEq, Eq, Copy, Clone)]
+    pub struct Ghost<T> {
+        _phantom: core::marker::PhantomData<T>,
+    }
+
+    impl<T> Ghost<T> {
+        pub fn new(_: T) -> Self {
+            Self {
+                _phantom: core::marker::PhantomData,
+            }
+        }
+        pub unsafe fn unsafe_new(_: &dyn Fn() -> T) -> Self {
+            Self {
+                _phantom: core::marker::PhantomData,
+            }
+        }
+        pub fn set(&self, _: T) {
+            // this should be replaced by prusti
+        }
+    }
+
     /// A macro for defining ghost blocks which will be left in for verification
     /// but omitted during compilation.
     pub use prusti_contracts_impl::ghost;
@@ -281,9 +303,31 @@ mod private {
         }
     }
 
+    pub type Ghost<T> = T;
+
+    pub trait GetSet {
+        fn get(self) -> Self;
+        fn set(&mut self, value: Self);
+    }
+
+    impl<T> GetSet for T {
+        #[inline(always)]
+        fn get(self) -> Self {
+            self
+        }
+        #[inline(always)]
+        fn set(&mut self, value: Self) {
+            *self = value;
+        }
+    }
+
     /// A macro for defining ghost blocks which will be left in for verification
     /// but omitted during compilation.
     pub use prusti_contracts_internal::ghost;
+}
+
+pub fn snapshot_equality<T>(_: T, _: T) -> bool {
+    panic!()
 }
 
 /// This function is used to evaluate an expression in the context just
@@ -307,3 +351,6 @@ pub fn exists<T, F>(_trigger_set: T, _closure: F) -> bool {
 }
 
 pub use private::*;
+
+//mod types;
+//pub use types::*;
