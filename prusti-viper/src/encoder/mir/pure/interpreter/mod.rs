@@ -591,6 +591,13 @@ impl<'p, 'v: 'p, 'tcx: 'v> ExpressionBackwardInterpreter<'p, 'v, 'tcx> {
                 "new" => subst_with(encoded_args[0].clone()),
                 _ => unreachable!("no further Ghost functions."),
             };
+        } else if proc_name == "prusti_contracts::snapshot_equality" {
+            assert_eq!(encoded_args.len(), 2);
+            assert!(self.has_structural_eq_impl(&args[0]).with_span(span)?);
+            return subst_with(vir_high::Expression::equals(
+                encoded_args[0].clone(),
+                encoded_args[1].clone(),
+            ));
         }
 
         // replace all the operations on Ints

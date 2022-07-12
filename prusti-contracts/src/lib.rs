@@ -326,6 +326,10 @@ mod private {
         }
     }
 
+    pub fn snapshot_equality<T>(_: T, _: T) -> bool {
+        panic!()
+    }
+
     /// A macro for defining ghost blocks which will be left in for verification
     /// but omitted during compilation.
     pub use prusti_contracts_internal::ghost;
