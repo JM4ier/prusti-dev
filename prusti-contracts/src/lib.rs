@@ -28,6 +28,9 @@ mod private {
     /// A macro for writing a loop body invariant.
     pub use prusti_contracts_impl::body_invariant;
 
+    /// A macro for writing a loop body variant.
+    pub use prusti_contracts_impl::body_variant;
+
     /// A macro for writing assertions using the full prusti specifications
     pub use prusti_contracts_impl::prusti_assert;
 
@@ -123,6 +126,9 @@ mod private {
 
     /// A macro for writing a loop body invariant.
     pub use prusti_contracts_internal::body_invariant;
+
+    /// A macro for writing a loop body variant.
+    pub use prusti_contracts_internal::body_variant;
 
     /// A macro for writing assertions using the full prusti specifications
     pub use prusti_contracts_internal::prusti_assert;

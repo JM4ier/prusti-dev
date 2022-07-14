@@ -42,6 +42,11 @@ pub fn body_invariant(_tokens: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+pub fn body_variant(_tokens: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
+#[proc_macro]
 pub fn prusti_assert(_tokens: TokenStream) -> TokenStream {
     TokenStream::new()
 }

@@ -180,6 +180,26 @@ impl AstRewriter {
         self.process_prusti_expression(quote! {loop_body_invariant_spec}, spec_id, tokens)
     }
 
+    /// Parse a loop invariant into a Rust expression
+    pub fn process_loop_variant(
+        &mut self,
+        spec_id: SpecificationId,
+        tokens: TokenStream,
+    ) -> syn::Result<TokenStream> {
+        let expr = parse_prusti(tokens)?;
+        let spec_id_str = spec_id.to_string();
+        Ok(quote_spanned! {expr.span()=>
+            {
+                #[prusti::spec_only]
+                #[prusti::loop_body_variant_spec]
+                #[prusti::spec_id = #spec_id_str]
+                || -> i64 {
+                    #expr
+                };
+            }
+        })
+    }
+
     /// Parse a prusti assertion into a Rust expression
     pub fn process_prusti_assertion(
         &mut self,
