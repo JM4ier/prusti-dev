@@ -1,5 +1,5 @@
 use prusti_interface::environment::{
-    is_ghost_begin_marker, is_ghost_end_marker, is_loop_invariant_block,
+    is_ghost_begin_marker, is_ghost_end_marker, is_loop_invariant_block, is_loop_variant_block,
     is_marked_specification_block, Procedure,
 };
 use prusti_rustc_interface::{
@@ -78,12 +78,12 @@ impl SpecificationBlocks {
         let loop_info = procedure.loop_info();
         let predecessors = body.predecessors();
         let mut loop_invariant_blocks = BTreeMap::<_, LoopInvariantBlocks>::new();
-        let mut loop_invariant_blocks_flat = BTreeSet::new();
+        let mut loop_spec_blocks_flat = BTreeSet::new();
         // We use reverse_postorder here because we need to make sure that we
         // preserve the order of invariants in which they were specified by the
         // user.
         for (bb, data) in prusti_rustc_interface::middle::mir::traversal::reverse_postorder(body) {
-            if specification_blocks.contains(&bb) && is_loop_invariant_block(data, tcx) {
+            if specification_blocks.contains(&bb) && (is_loop_invariant_block(data, tcx) || is_loop_variant_block(data, tcx)) {
                 let loop_head = loop_info.get_loop_head(bb).unwrap();
                 let loop_blocks = loop_invariant_blocks.entry(loop_head).or_insert_with(|| {
                     assert_eq!(
@@ -97,7 +97,7 @@ impl SpecificationBlocks {
                     }
                 });
                 loop_blocks.specification_blocks.push(bb);
-                loop_invariant_blocks_flat.insert(bb);
+                loop_spec_blocks_flat.insert(bb);
             }
         }
 
@@ -107,7 +107,7 @@ impl SpecificationBlocks {
             if !specification_blocks.contains(&bb) {
                 for successor in body.successors(bb) {
                     if specification_blocks.contains(&successor)
-                        && !loop_invariant_blocks_flat.contains(&successor)
+                        && !loop_spec_blocks_flat.contains(&successor)
                     {
                         specification_entry_blocks.insert(successor);
                     }

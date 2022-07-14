@@ -21,6 +21,7 @@ pub enum Statement {
     Exhale(Exhale),
     Consume(Consume),
     Havoc(Havoc),
+    GhostHavoc(GhostHavoc),
     Assume(Assume),
     Assert(Assert),
     LoopInvariant(LoopInvariant),
@@ -29,6 +30,7 @@ pub enum Statement {
     WritePlace(WritePlace),
     WriteAddress(WriteAddress),
     Assign(Assign),
+    GhostAssign(GhostAssign),
     LeakAll(LeakAll),
     SetUnionVariant(SetUnionVariant),
     NewLft(NewLft),
@@ -85,6 +87,12 @@ pub struct Havoc {
     pub position: Position,
 }
 
+#[display(fmt = "ghost-havoc {}", variable)]
+pub struct GhostHavoc {
+    pub variable: VariableDecl,
+    pub position: Position,
+}
+
 #[display(fmt = "assume {}", expression)]
 /// Assume the boolean expression.
 pub struct Assume {
@@ -104,7 +112,7 @@ pub struct Assert {
     "display::foreach!(\"    {}\n\", maybe_modified_places)",
     "display::foreach!(\"    {}\n\", functional_specifications)"
 )]
-/// The loop invariant.
+/// The loop invariant, with an optionally attached loop variant.
 pub struct LoopInvariant {
     pub loop_head: BasicBlockId,
     /// A block dominated by the loop head that has the loop head as a
@@ -121,7 +129,14 @@ pub struct LoopInvariant {
     /// memory.
     pub maybe_modified_places: Vec<Predicate>,
     pub functional_specifications: Vec<Expression>,
+    pub variant: Option<LoopVariant>,
     pub position: Position,
+}
+
+#[display(fmt = "{}: {}", var, expr)]
+pub struct LoopVariant {
+    pub var: VariableDecl,
+    pub expr: Expression,
 }
 
 #[display(fmt = "move {} ← {}", target, source)]
@@ -215,6 +230,13 @@ pub struct WriteAddress {
 pub struct Assign {
     pub target: Expression,
     pub value: Rvalue,
+    pub position: Position,
+}
+
+#[display(fmt = "ghost_assign {} := {}", target, value)]
+pub struct GhostAssign {
+    pub target: Expression,
+    pub value: Expression,
     pub position: Position,
 }
 

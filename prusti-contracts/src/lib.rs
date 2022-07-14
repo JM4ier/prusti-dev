@@ -28,11 +28,17 @@ mod private {
     /// A macro for writing a loop body invariant.
     pub use prusti_contracts_impl::body_invariant;
 
+    /// A macro for writing a loop body variant.
+    pub use prusti_contracts_impl::body_variant;
+
     /// A macro for writing assertions using the full prusti specifications
     pub use prusti_contracts_impl::prusti_assert;
 
     /// A macro for writing assumptions using prusti syntax
     pub use prusti_contracts_impl::prusti_assume;
+
+    /// A macro to annotate that an impure function terminates
+    pub use prusti_contracts_impl::terminates;
 
     /// A macro for defining a closure with a specification.
     /// Note: this is a declarative macro defined in this crate
@@ -124,6 +130,9 @@ mod private {
     /// A macro for writing a loop body invariant.
     pub use prusti_contracts_internal::body_invariant;
 
+    /// A macro for writing a loop body variant.
+    pub use prusti_contracts_internal::body_variant;
+
     /// A macro for writing assertions using the full prusti specifications
     pub use prusti_contracts_internal::prusti_assert;
 
@@ -149,6 +158,9 @@ mod private {
     /// A macro to add trait bounds on a generic type parameter and specifications
     /// which are active only when these bounds are satisfied for a call.
     pub use prusti_contracts_internal::ghost_constraint;
+
+    /// A macro to annotate that an impure function terminates
+    pub use prusti_contracts_internal::terminates;
 
     pub fn prusti_set_union_active_field<T>(_arg: T) {
         unreachable!();

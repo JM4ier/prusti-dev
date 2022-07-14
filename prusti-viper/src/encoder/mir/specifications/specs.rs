@@ -9,9 +9,9 @@ use log::{debug, trace};
 use prusti_interface::{
     environment::Environment,
     specs::typed::{
-        DefSpecificationMap, GhostBegin, GhostEnd, LoopSpecification, ProcedureSpecification,
-        ProcedureSpecificationKind, ProcedureSpecificationKindError, PrustiAssertion,
-        PrustiAssumption, Refinable, SpecificationItem, TypeSpecification,
+        DefSpecificationMap, GhostBegin, GhostEnd, LoopSpecification,
+        ProcedureSpecification, ProcedureSpecificationKind, ProcedureSpecificationKindError,
+        PrustiAssertion, PrustiAssumption, Refinable, SpecificationItem, TypeSpecification,
     },
     PrustiError,
 };

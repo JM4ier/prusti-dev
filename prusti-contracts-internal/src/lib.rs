@@ -42,6 +42,11 @@ pub fn body_invariant(tokens: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+pub fn body_variant(tokens: TokenStream) -> TokenStream {
+    prusti_specs::body_variant(tokens.into()).into()
+}
+
+#[proc_macro]
 pub fn prusti_assert(tokens: TokenStream) -> TokenStream {
     prusti_specs::prusti_assertion(tokens.into()).into()
 }
@@ -89,6 +94,11 @@ pub fn ghost_constraint(attr: TokenStream, tokens: TokenStream) -> TokenStream {
         tokens.into(),
     )
     .into()
+}
+
+#[proc_macro_attribute]
+pub fn terminates(attr: TokenStream, tokens: TokenStream) -> TokenStream {
+    rewrite_prusti_attributes(SpecAttributeKind::Terminates, attr.into(), tokens.into()).into()
 }
 
 #[proc_macro]

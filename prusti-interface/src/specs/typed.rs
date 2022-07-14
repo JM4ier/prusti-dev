@@ -1,10 +1,12 @@
 use crate::{environment::Environment, utils::has_trait_bounds_ghost_constraint};
 pub use common::{SpecIdRef, SpecType, SpecificationId};
 use log::trace;
+use prusti_rustc_interface::{
+    hir::def_id::{DefId, LocalDefId},
+    span::Span,
+};
 use prusti_specs::specifications::common;
 use rustc_hash::FxHashMap;
-use prusti_rustc_interface::hir::def_id::{DefId, LocalDefId};
-use prusti_rustc_interface::span::Span;
 use std::{
     collections::HashMap,
     fmt::{Debug, Display, Formatter},
@@ -64,6 +66,7 @@ pub struct ProcedureSpecification {
     pub posts: SpecificationItem<Vec<LocalDefId>>,
     pub pledges: SpecificationItem<Vec<Pledge>>,
     pub trusted: SpecificationItem<bool>,
+    pub terminates: SpecificationItem<Option<LocalDefId>>,
 }
 
 impl ProcedureSpecification {
@@ -77,6 +80,7 @@ impl ProcedureSpecification {
             posts: SpecificationItem::Empty,
             pledges: SpecificationItem::Empty,
             trusted: SpecificationItem::Inherent(false),
+            terminates: SpecificationItem::Inherent(None),
         }
     }
 }
@@ -106,8 +110,9 @@ impl Display for ProcedureSpecificationKind {
 }
 
 #[derive(Debug, Clone)]
-pub struct LoopSpecification {
-    pub invariant: LocalDefId,
+pub enum LoopSpecification {
+    Invariant(LocalDefId),
+    Variant(LocalDefId),
 }
 
 /// Specification of a type.
@@ -291,6 +296,14 @@ impl SpecGraph<ProcedureSpecification> {
         self.specs_with_constraints
             .values_mut()
             .for_each(|s| s.trusted.set(trusted));
+    }
+
+    /// Sets the termination flag for the base spec and all constrained specs.
+    pub fn set_terminates(&mut self, terminates: LocalDefId) {
+        self.base_spec.terminates.set(Some(terminates));
+        self.specs_with_constraints
+            .values_mut()
+            .for_each(|s| s.terminates.set(Some(terminates)));
     }
 
     /// Sets the [ProcedureSpecificationKind] for the base spec and all constrained specs.
@@ -600,6 +613,7 @@ impl Refinable for ProcedureSpecification {
             pledges: self.pledges.refine(&other.pledges),
             kind: self.kind.refine(&other.kind),
             trusted: self.trusted.refine(&other.trusted),
+            terminates: self.terminates.refine(&other.terminates),
         }
     }
 }

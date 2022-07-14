@@ -28,15 +28,24 @@ pub(crate) trait MirTypeLayoutsEncoderInterface<'tcx> {
         &self,
         ty: ty::Ty<'tcx>,
     ) -> SpannedEncodingResult<vir_high::Expression>;
+    fn encode_type_size_expression_with_reps_vir(
+        &self,
+        count: vir_high::Expression,
+        ty: vir_high::Type,
+    ) -> SpannedEncodingResult<vir_high::Expression>;
+    fn encode_type_size_expression_vir(
+        &self,
+        ty: vir_high::Type,
+    ) -> SpannedEncodingResult<vir_high::Expression>;
 }
 
 impl<'v, 'tcx: 'v> MirTypeLayoutsEncoderInterface<'tcx> for super::super::super::Encoder<'v, 'tcx> {
-    fn encode_type_size_expression_with_reps(
+    fn encode_type_size_expression_with_reps_vir(
         &self,
         count: vir_high::Expression,
-        ty: ty::Ty<'tcx>,
+        ty: vir_high::Type,
     ) -> SpannedEncodingResult<vir_high::Expression> {
-        let encoded_ty = self.encode_type_high(ty)?.erase_lifetimes();
+        let encoded_ty = ty;
         let usize = vir_high::Type::Int(vir_high::ty::Int::Usize);
         let function_call = vir_high::expression::FuncApp::new(
             "size",
@@ -73,6 +82,20 @@ impl<'v, 'tcx: 'v> MirTypeLayoutsEncoderInterface<'tcx> for super::super::super:
                 .insert(encoded_ty);
         }
         Ok(vir_high::Expression::FuncApp(function_call))
+    }
+    fn encode_type_size_expression_vir(
+        &self,
+        ty: vir_high::Type,
+    ) -> SpannedEncodingResult<vir_high::Expression> {
+        self.encode_type_size_expression_with_reps_vir(1usize.into(), ty)
+    }
+    fn encode_type_size_expression_with_reps(
+        &self,
+        count: vir_high::Expression,
+        ty: ty::Ty<'tcx>,
+    ) -> SpannedEncodingResult<vir_high::Expression> {
+        let encoded_ty = self.encode_type_high(ty)?.erase_lifetimes();
+        self.encode_type_size_expression_with_reps_vir(count, encoded_ty)
     }
 
     fn encode_type_size_expression(

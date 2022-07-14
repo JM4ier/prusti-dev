@@ -71,6 +71,7 @@ fn extract_prusti_attributes(
                     }
                     // Nothing to do for attributes without arguments.
                     SpecAttributeKind::Pure
+                    | SpecAttributeKind::Terminates
                     | SpecAttributeKind::Trusted
                     | SpecAttributeKind::Predicate => {
                         assert!(attr.tokens.is_empty(), "Unexpected shape of an attribute.");
@@ -146,6 +147,7 @@ fn generate_spec_and_assertions(
             SpecAttributeKind::AfterExpiry => generate_for_after_expiry(attr_tokens, item),
             SpecAttributeKind::AssertOnExpiry => generate_for_assert_on_expiry(attr_tokens, item),
             SpecAttributeKind::Pure => generate_for_pure(attr_tokens, item),
+            SpecAttributeKind::Terminates => generate_for_terminates(attr_tokens, item),
             SpecAttributeKind::Trusted => generate_for_trusted(attr_tokens, item),
             // Predicates are handled separately below; the entry in the SpecAttributeKind enum
             // only exists so we successfully parse it and emit an error in
@@ -228,6 +230,26 @@ fn generate_for_assert_on_expiry(attr: TokenStream, item: &untyped::AnyFnItem) -
     ))
 }
 
+/// Generate spec items and attributes to typecheck and later retrieve "terminates" annotations.
+fn generate_for_terminates(mut attr: TokenStream, item: &untyped::AnyFnItem) -> GeneratedResult {
+    if attr.is_empty() {
+        attr = quote! { Int::new(1) };
+    }
+
+    let mut rewriter = rewriter::AstRewriter::new();
+    let spec_id = rewriter.generate_spec_id();
+    let spec_id_str = spec_id.to_string();
+    let spec_item =
+        rewriter.process_assertion(rewriter::SpecItemType::Termination, spec_id, attr, item)?;
+
+    Ok((
+        vec![spec_item],
+        vec![parse_quote_spanned! {item.span()=>
+            #[prusti::terminates_spec_id_ref = #spec_id_str]
+        }],
+    ))
+}
+
 /// Generate spec items and attributes to typecheck and later retrieve "pure" annotations.
 fn generate_for_pure(attr: TokenStream, item: &untyped::AnyFnItem) -> GeneratedResult {
     if !attr.is_empty() {
@@ -264,6 +286,10 @@ fn generate_for_trusted(attr: TokenStream, item: &untyped::AnyFnItem) -> Generat
 
 pub fn body_invariant(tokens: TokenStream) -> TokenStream {
     generate_expression_closure(&AstRewriter::process_loop_invariant, tokens)
+}
+
+pub fn body_variant(tokens: TokenStream) -> TokenStream {
+    generate_expression_closure(&AstRewriter::process_loop_variant, tokens)
 }
 
 pub fn prusti_assertion(tokens: TokenStream) -> TokenStream {
@@ -515,41 +541,31 @@ pub fn trusted(attr: TokenStream, tokens: TokenStream) -> TokenStream {
             .params
             .iter()
             .map(|generic_param| match generic_param {
-                syn::GenericParam::Type(param) => {
-                    syn::GenericParam::Type(
-                        syn::TypeParam {
-                            attrs: Vec::new(),
-                            bounds: syn::punctuated::Punctuated::new(),
-                            colon_token: None,
-                            default: None,
-                            eq_token: None,
-                            ident: param.ident.clone(),
-                        }
-                    )
-                },
+                syn::GenericParam::Type(param) => syn::GenericParam::Type(syn::TypeParam {
+                    attrs: Vec::new(),
+                    bounds: syn::punctuated::Punctuated::new(),
+                    colon_token: None,
+                    default: None,
+                    eq_token: None,
+                    ident: param.ident.clone(),
+                }),
                 syn::GenericParam::Lifetime(param) => {
-                    syn::GenericParam::Lifetime(
-                        syn::LifetimeDef {
-                            attrs: Vec::new(),
-                            bounds: syn::punctuated::Punctuated::new(),
-                            colon_token: None,
-                            lifetime: param.lifetime.clone(),
-                        }
-                    )
-                },
-                syn::GenericParam::Const(param) => {
-                    syn::GenericParam::Const(
-                        syn::ConstParam {
-                            attrs: Vec::new(),
-                            colon_token: param.colon_token,
-                            const_token: param.const_token,
-                            default: None,
-                            eq_token: None,
-                            ident: param.ident.clone(),
-                            ty: param.ty.clone(),
-                        }
-                    )
+                    syn::GenericParam::Lifetime(syn::LifetimeDef {
+                        attrs: Vec::new(),
+                        bounds: syn::punctuated::Punctuated::new(),
+                        colon_token: None,
+                        lifetime: param.lifetime.clone(),
+                    })
                 }
+                syn::GenericParam::Const(param) => syn::GenericParam::Const(syn::ConstParam {
+                    attrs: Vec::new(),
+                    colon_token: param.colon_token,
+                    const_token: param.const_token,
+                    default: None,
+                    eq_token: None,
+                    ident: param.ident.clone(),
+                    ty: param.ty.clone(),
+                }),
             })
             .collect::<syn::punctuated::Punctuated<_, syn::Token![,]>>();
         // TODO: similarly to extern_specs, don't generate an actual impl

@@ -4,7 +4,7 @@ use self::{
 };
 use super::MirProcedureEncoderInterface;
 use crate::encoder::{
-    errors::{ErrorCtxt, PanicCause, SpannedEncodingResult, WithSpan},
+    errors::{ErrorCtxt, PanicCause, SpannedEncodingError, SpannedEncodingResult, WithSpan},
     mir::{
         casts::CastsEncoderInterface,
         constants::ConstantsEncoderInterface,
@@ -63,6 +63,7 @@ mod lifetimes;
 mod loops;
 mod scc;
 mod specification_blocks;
+mod termination;
 
 pub(super) fn encode_procedure<'v, 'tcx: 'v>(
     encoder: &mut Encoder<'v, 'tcx>,
@@ -111,6 +112,7 @@ pub(super) fn encode_procedure<'v, 'tcx: 'v>(
         points_to_reborrow,
         reborrow_lifetimes_to_remove_for_block,
         current_basic_block,
+        termination_variable: None,
     };
     procedure_encoder.encode()
 }
@@ -146,10 +148,12 @@ struct ProcedureEncoder<'p, 'v: 'p, 'tcx: 'v> {
     points_to_reborrow: BTreeSet<vir_high::Local>,
     reborrow_lifetimes_to_remove_for_block: BTreeMap<mir::BasicBlock, BTreeSet<String>>,
     current_basic_block: Option<mir::BasicBlock>,
+    termination_variable: Option<vir_high::VariableDecl>,
 }
 
 impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
     fn encode(&mut self) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
+        self.pure_sanity_checks()?;
         let name = self.encoder.encode_item_name(self.def_id);
         let (allocate_parameters, deallocate_parameters) = self.encode_parameters()?;
         let (allocate_returns, deallocate_returns) = self.encode_returns()?;
@@ -159,9 +163,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             self.encode_functional_specifications()?;
         let (assume_lifetime_preconditions, assert_lifetime_postconditions) =
             self.encode_lifetime_specifications()?;
+        let termination_initialization = self.encode_termnination_initialization()?;
         let mut pre_statements = assume_lifetime_preconditions;
         pre_statements.extend(allocate_parameters);
         pre_statements.extend(assume_preconditions);
+        pre_statements.extend(termination_initialization);
         pre_statements.extend(allocate_returns);
         let mut post_statements = assert_postconditions;
         post_statements.extend(deallocate_parameters);
@@ -171,6 +177,19 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         self.encode_body(&mut procedure_builder)?;
         self.encode_implicit_allocations(&mut procedure_builder)?;
         Ok(procedure_builder.build())
+    }
+
+    fn pure_sanity_checks(&self) -> SpannedEncodingResult<()> {
+        if self.encoder.is_pure(self.def_id, None) && !self.encoder.terminates(self.def_id, None) {
+            let mut err = SpannedEncodingError::incorrect(
+                "Pure functions need to terminate",
+                self.encoder.get_mir_body_span(self.mir),
+            );
+            err.set_help("Consider adding the `#[terminates]` attribute.");
+            Err(err)
+        } else {
+            Ok(())
+        }
     }
 
     fn encode_local(
@@ -253,6 +272,83 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         ))
     }
 
+    fn encode_termination_measure_call_assertion(
+        &mut self,
+        block_builder: &mut BasicBlockBuilder,
+        span: Span,
+        procedure_contract: &ProcedureContractMirDef<'tcx>,
+        call_substs: SubstsRef<'tcx>,
+        arguments: &[vir_high::Expression],
+    ) -> SpannedEncodingResult<()> {
+        let called_fun = procedure_contract.def_id;
+
+        if !self.encoder.terminates(called_fun, Some(call_substs)) {
+            block_builder.add_statement(self.encoder.set_statement_error_ctxt(
+                vir_high::Statement::assert_no_pos(false.into()),
+                span,
+                ErrorCtxt::UnexpectedReachableCall,
+                self.def_id,
+            )?);
+        }
+
+        if !self
+            .encoder
+            .env()
+            .callee_reaches_caller(self.def_id, called_fun, call_substs)
+        {
+            return Ok(());
+        }
+
+        let call_expr =
+            self.encode_termination_expression(&procedure_contract, span, call_substs, &arguments)?;
+
+        let term_var = self.termination_variable.clone().unwrap();
+        let term_ty = vir_high::Type::Int(vir_high::ty::Int::Unbounded);
+        let zero = vir_high::Expression::constant_no_pos(0.into(), term_ty);
+        let cond = vir_high::Expression::and(
+            vir_high::Expression::greater_than(term_var.clone().into(), zero),
+            vir_high::Expression::greater_than(term_var.clone().into(), call_expr),
+        );
+
+        let assert_statement = self.encoder.set_statement_error_ctxt(
+            vir_high::Statement::assert_no_pos(cond),
+            span,
+            ErrorCtxt::CallTermination,
+            self.def_id,
+        )?;
+        block_builder.add_statement(assert_statement);
+
+        Ok(())
+    }
+
+    fn encode_termination_expression(
+        &mut self,
+        procedure_contract: &ProcedureContractMirDef<'tcx>,
+        span: Span,
+        call_substs: SubstsRef<'tcx>,
+        arguments: &[vir_high::Expression],
+    ) -> SpannedEncodingResult<vir_high::Expression> {
+        assert!(self.encoder.terminates(self.def_id, None));
+
+        let (expr, expr_substs) = procedure_contract
+            .functional_termination_measure(self.encoder.env(), call_substs)
+            .ok_or_else(|| {
+                SpannedEncodingError::incorrect(
+                    "Terminating function calls nonterminating function",
+                    span,
+                )
+            })?;
+
+        Ok(self.encoder.encode_assertion_high(
+            &expr,
+            None,
+            arguments,
+            None,
+            self.def_id,
+            expr_substs,
+        )?)
+    }
+
     fn encode_precondition_expressions(
         &mut self,
         procedure_contract: &ProcedureContractMirDef<'tcx>,
@@ -312,6 +408,35 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         Ok(postconditions)
     }
 
+    fn encode_termnination_initialization(
+        &mut self,
+    ) -> SpannedEncodingResult<Vec<vir_high::Statement>> {
+        if self.encoder.terminates(self.def_id, None) {
+            let termination_expr = self.encode_termination_expression(
+                &procedure_contract,
+                mir_span,
+                substs,
+                &arguments,
+            )?;
+            let term_var = self.fresh_ghost_variable(
+                "termination_var",
+                vir_high::Type::Int(vir_high::ty::Int::Unbounded),
+            );
+            self.termination_variable = Some(term_var.clone());
+            let assign_stmt =
+                vir_high::Statement::ghost_assign_no_pos(term_var.into(), termination_expr);
+            let assign_stmt = self.encoder.set_statement_error_ctxt(
+                assign_stmt,
+                mir_span,
+                ErrorCtxt::UnexpectedAssignMethodTerminationMeasure,
+                self.def_id,
+            )?;
+            vec![assign_stmt]
+        } else {
+            vec![]
+        }
+    }
+
     fn encode_functional_specifications(
         &mut self,
     ) -> SpannedEncodingResult<(Vec<vir_high::Statement>, Vec<vir_high::Statement>)> {
@@ -340,6 +465,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             )?;
             preconditions.push(assume_statement);
         }
+
         let old_label = self.encoder.set_statement_error_ctxt(
             vir_high::Statement::old_label_no_pos(PRECONDITION_LABEL.to_string()),
             mir_span,
@@ -510,6 +636,16 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             self.encode_terminator(&mut block_builder, location, terminator)?;
         }
         if let Some(statement) = self.loop_invariant_encoding.remove(&bb) {
+            if self.needs_termination(bb)
+                && !statement.clone().unwrap_loop_invariant().variant.is_some()
+            {
+                block_builder.add_statement(self.encoder.set_statement_error_ctxt(
+                    vir_high::Statement::assert_no_pos(false.into()),
+                    data.terminator().source_info.span,
+                    ErrorCtxt::UnexpectedReachableLoop,
+                    self.def_id,
+                )?);
+            }
             block_builder.add_statement(statement);
         }
         block_builder.build();
@@ -1536,6 +1672,16 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             .get_mir_procedure_contract_for_call(self.def_id, called_def_id, call_substs)
             .with_span(span)?;
 
+        if self.encoder.terminates(self.def_id, None) {
+            self.encode_termination_measure_call_assertion(
+                block_builder,
+                span,
+                &procedure_contract,
+                call_substs,
+                &arguments,
+            )?;
+        }
+
         for expression in
             self.encode_precondition_expressions(&procedure_contract, call_substs, &arguments)?
         {
@@ -1628,7 +1774,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     post_call_block_builder.add_statement(assume_statement);
                 }
                 if self.encoder.is_pure(called_def_id, Some(call_substs))
-                    && self.def_id != called_def_id
+                    && !self.encoder.env().callee_reaches_caller(
+                        self.def_id,
+                        called_def_id,
+                        call_substs,
+                    )
                 {
                     // If we are verifying a pure function, we always need
                     // to encode it as a method
@@ -1796,7 +1946,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     (*loop_head, Vec::new())
                 };
             let statement =
-                self.encode_loop_invariant(*loop_head, invariant_location, specification_blocks)?;
+                self.encode_loop_specs(*loop_head, invariant_location, specification_blocks)?;
             self.loop_invariant_encoding
                 .insert(invariant_location, statement);
         }
@@ -1850,7 +2000,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
 
                 let assert_expr = self.encoder.set_expression_error_ctxt(
                     self.encoder
-                        .encode_invariant_high(self.mir, bb, self.def_id, cl_substs)?,
+                        .encode_loop_spec_high(self.mir, bb, self.def_id, cl_substs)?,
                     span,
                     error_ctxt.clone(),
                     self.def_id,
@@ -1898,7 +2048,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
 
                 let expr = self.encoder.set_expression_error_ctxt(
                     self.encoder
-                        .encode_invariant_high(self.mir, bb, self.def_id, cl_substs)?,
+                        .encode_loop_spec_high(self.mir, bb, self.def_id, cl_substs)?,
                     span,
                     error_ctxt.clone(),
                     self.def_id,

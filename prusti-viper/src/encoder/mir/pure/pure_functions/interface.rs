@@ -245,6 +245,7 @@ impl<'v, 'tcx: 'v> PureFunctionEncoderInterface<'v, 'tcx>
         );
 
         let mir_span = self.env().tcx().def_span(proc_def_id);
+
         let substs_key = self
             .encode_generic_arguments_high(proc_def_id, substs)
             .with_span(mir_span)?;

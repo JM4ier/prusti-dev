@@ -9,6 +9,7 @@ impl Positioned for Statement {
             Self::Inhale(statement) => statement.position(),
             Self::Exhale(statement) => statement.position(),
             Self::Havoc(statement) => statement.position(),
+            Self::GhostHavoc(statement) => statement.position(),
             Self::Assume(statement) => statement.position(),
             Self::Assert(statement) => statement.position(),
             Self::LoopInvariant(statement) => statement.position(),
@@ -17,6 +18,7 @@ impl Positioned for Statement {
             Self::WritePlace(statement) => statement.position(),
             Self::WriteAddress(statement) => statement.position(),
             Self::Assign(statement) => statement.position(),
+            Self::GhostAssign(statement) => statement.position(),
             Self::Consume(statement) => statement.position(),
             Self::LeakAll(statement) => statement.position(),
             Self::SetUnionVariant(statement) => statement.position(),
@@ -66,6 +68,12 @@ impl Positioned for Havoc {
     }
 }
 
+impl Positioned for GhostHavoc {
+    fn position(&self) -> Position {
+        self.position
+    }
+}
+
 impl Positioned for Assume {
     fn position(&self) -> Position {
         self.position
@@ -109,6 +117,12 @@ impl Positioned for WriteAddress {
 }
 
 impl Positioned for Assign {
+    fn position(&self) -> Position {
+        self.position
+    }
+}
+
+impl Positioned for GhostAssign {
     fn position(&self) -> Position {
         self.position
     }

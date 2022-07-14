@@ -248,6 +248,10 @@ pub fn is_loop_invariant_block<'tcx>(bb_data: &BasicBlockData<'tcx>, tcx: TyCtxt
     get_loop_invariant(bb_data, tcx).is_some()
 }
 
+pub fn is_loop_variant_block<'tcx>(bb: &BasicBlockData<'tcx>, tcx: TyCtxt<'tcx>) -> bool {
+    is_spec_block_kind(bb, tcx, "loop_body_variant_spec")
+}
+
 pub fn is_ghost_begin_marker<'tcx>(bb: &BasicBlockData<'tcx>, tcx: TyCtxt<'tcx>) -> bool {
     is_spec_block_kind(bb, tcx, "ghost_begin")
 }

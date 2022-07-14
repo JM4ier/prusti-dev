@@ -18,6 +18,7 @@ pub enum Statement {
     Exhale(Exhale),
     Consume(Consume),
     Havoc(Havoc),
+    GhostHavoc(GhostHavoc),
     Assume(Assume),
     Assert(Assert),
     FoldOwned(FoldOwned),
@@ -33,6 +34,7 @@ pub enum Statement {
     WritePlace(WritePlace),
     WriteAddress(WriteAddress),
     Assign(Assign),
+    GhostAssign(GhostAssign),
     NewLft(NewLft),
     EndLft(EndLft),
     DeadReference(DeadReference),
@@ -85,6 +87,12 @@ pub struct Consume {
 /// Havoc the permission denoted by the place.
 pub struct Havoc {
     pub predicate: Predicate,
+    pub position: Position,
+}
+
+#[display(fmt = "ghost-havoc {}", variable)]
+pub struct GhostHavoc {
+    pub variable: VariableDecl,
     pub position: Position,
 }
 
@@ -280,6 +288,13 @@ pub struct WriteAddress {
 pub struct Assign {
     pub target: Expression,
     pub value: Rvalue,
+    pub position: Position,
+}
+
+#[display(fmt = "ghost_assign {} := {}", target, value)]
+pub struct GhostAssign {
+    pub target: Expression,
+    pub value: Expression,
     pub position: Position,
 }
 
