@@ -24,6 +24,7 @@ pub enum Statement {
     Assume(Assume),
     Assert(Assert),
     LoopInvariant(LoopInvariant),
+    LoopVariant(LoopVariant),
     MovePlace(MovePlace),
     CopyPlace(CopyPlace),
     WritePlace(WritePlace),
@@ -121,6 +122,19 @@ pub struct LoopInvariant {
     /// memory.
     pub maybe_modified_places: Vec<Predicate>,
     pub functional_specifications: Vec<Expression>,
+    pub position: Position,
+}
+
+#[display(
+    fmt = "loop-variant (\n{})", spec
+)]
+/// The loop variant.
+pub struct LoopVariant {
+    pub loop_head: BasicBlockId,
+    /// A block dominated by the loop head that has the loop head as a
+    /// successor.
+    pub back_edges: Vec<BasicBlockId>,
+    pub spec: Expression,
     pub position: Position,
 }
 

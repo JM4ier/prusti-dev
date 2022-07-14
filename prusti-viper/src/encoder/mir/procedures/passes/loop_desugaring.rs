@@ -96,6 +96,17 @@ fn find_loop_invariant(
     None
 }
 
+fn find_loop_variant(
+    procedure: &vir_high::ProcedureDecl,
+) -> Option<(vir_high::BasicBlockId, &vir_high::LoopVariant)> {
+    for (bb, _, statement) in procedure.iter_statements() {
+        if let vir_high::Statement::LoopVariant(loop_variant) = statement {
+            return Some((bb.clone(), loop_variant));
+        }
+    }
+    None
+}
+
 fn duplicate_blocks<'v, 'tcx: 'v>(
     encoder: &mut Encoder<'v, 'tcx>,
     procedure: &mut vir_high::ProcedureDecl,

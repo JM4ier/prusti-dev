@@ -85,6 +85,13 @@ impl<'v, 'tcx> ToMiddleStatementLowerer for crate::encoder::Encoder<'v, 'tcx> {
         unreachable!("loop invariant statement cannot be lowered")
     }
 
+    fn to_middle_statement_statement_loop_variant(
+        &self,
+        _: vir_high::LoopVariant,
+    ) -> Result<vir_mid::Statement, Self::Error> {
+        unreachable!("loop variant statement cannot be lowered")
+    }
+
     fn to_middle_statement_assert(
         &self,
         statement: vir_high::Assert,

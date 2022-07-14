@@ -64,6 +64,9 @@ impl CollectPermissionChanges for vir_high::Statement {
             vir_high::Statement::LoopInvariant(_) => {
                 unreachable!("LoopInvariant statement should have been removed before.");
             }
+            vir_high::Statement::LoopVariant(_) => {
+                unreachable!("LoopVariant statement should have been removed before.");
+            }
             vir_high::Statement::MovePlace(statement) => {
                 statement.collect(encoder, consumed_permissions, produced_permissions)
             }
