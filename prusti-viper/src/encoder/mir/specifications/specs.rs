@@ -9,9 +9,9 @@ use log::{debug, trace};
 use prusti_interface::{
     environment::Environment,
     specs::typed::{
-        DefSpecificationMap, GhostBegin, GhostEnd, LoopSpecification, ProcedureSpecification,
-        ProcedureSpecificationKind, ProcedureSpecificationKindError, PrustiAssertion,
-        PrustiAssumption, Refinable, SpecificationItem, TypeSpecification,
+        DefSpecificationMap, GhostBegin, GhostEnd, LoopSpecification, LoopVariant,
+        ProcedureSpecification, ProcedureSpecificationKind, ProcedureSpecificationKindError,
+        PrustiAssertion, PrustiAssumption, Refinable, SpecificationItem, TypeSpecification,
     },
     PrustiError,
 };
@@ -73,6 +73,11 @@ impl<'tcx> Specifications<'tcx> {
     pub(super) fn get_loop_spec(&self, def_id: &DefId) -> Option<&LoopSpecification> {
         trace!("Get loop specs of {:?}", def_id);
         self.user_typed_specs.get_loop_spec(def_id)
+    }
+
+    pub(super) fn get_loop_variant(&self, def_id: &DefId) -> Option<&LoopVariant> {
+        trace!("Get loop variant of {:?}", def_id);
+        self.user_typed_specs.get_loop_variant(def_id)
     }
 
     pub(super) fn get_type_spec(&self, def_id: &DefId) -> Option<&TypeSpecification> {

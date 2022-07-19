@@ -16,6 +16,15 @@ pub(in super::super) fn desugar_loops<'v, 'tcx: 'v>(
     encoder: &mut Encoder<'v, 'tcx>,
     mut procedure: vir_high::ProcedureDecl,
 ) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
+    procedure = desugar_loop_invariants(encoder, procedure)?;
+    procedure = desugar_loop_variants(encoder, procedure)?;
+    Ok(procedure)
+}
+
+fn desugar_loop_invariants<'v, 'tcx: 'v>(
+    encoder: &mut Encoder<'v, 'tcx>,
+    mut procedure: vir_high::ProcedureDecl,
+) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
     let mut is_first = true;
     while let Some((invariant_block_id, loop_invariant)) = find_loop_invariant(&procedure) {
         let loop_head = loop_invariant.loop_head.clone();
@@ -81,6 +90,47 @@ pub(in super::super) fn desugar_loops<'v, 'tcx: 'v>(
             )?;
             invariant_block.statements.push(statement);
         }
+    }
+    Ok(procedure)
+}
+
+fn desugar_loop_variants<'v, 'tcx: 'v>(
+    encoder: &mut Encoder<'v, 'tcx>,
+    mut procedure: vir_high::ProcedureDecl,
+) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
+    let mut predecessors = BTreeMap::new();
+    for (bb, succ) in procedure.predecessors().into_iter() {
+        predecessors.insert(
+            bb.clone(),
+            succ.into_iter()
+                .cloned()
+                .collect::<Vec<vir_high::BasicBlockId>>(),
+        );
+    }
+    let predecessors = predecessors;
+
+    while let Some((bb, variant)) = find_loop_variant(&procedure) {
+        let loop_head = variant.loop_head.clone();
+        let back_edges = variant.back_edges.clone();
+
+        let variant_block = procedure.basic_blocks.get_mut(&bb).unwrap();
+        let variant = variant_block
+            .statements
+            .pop()
+            .unwrap()
+            .unwrap_loop_variant();
+
+        let loop_pred = &predecessors[&loop_head]
+            .iter()
+            .filter(|bb| !back_edges.contains(bb))
+            .collect::<Vec<_>>();
+
+        assert!(!loop_pred.is_empty());
+
+        let variant_var = todo!();
+        let variant_tmp_var = todo!();
+
+        todo!("loop variant desugaring");
     }
     Ok(procedure)
 }

@@ -1,8 +1,10 @@
-use prusti_rustc_interface::ast::ast;
-use prusti_rustc_interface::errors::MultiSpan;
-use prusti_rustc_interface::hir::intravisit;
-use prusti_rustc_interface::middle::{hir::map::Map, ty::TyCtxt};
-use prusti_rustc_interface::span::Span;
+use prusti_rustc_interface::{
+    ast::ast,
+    errors::MultiSpan,
+    hir::intravisit,
+    middle::{hir::map::Map, ty::TyCtxt},
+    span::Span,
+};
 
 use crate::{
     environment::Environment,
@@ -57,6 +59,7 @@ pub struct SpecCollector<'a, 'tcx: 'a> {
     /// Map from functions/loops/types to their specifications.
     procedure_specs: HashMap<LocalDefId, ProcedureSpecRefs>,
     loop_specs: Vec<LocalDefId>,
+    loop_variants: Vec<LocalDefId>,
     type_specs: HashMap<LocalDefId, TypeSpecRefs>,
     prusti_assertions: Vec<LocalDefId>,
     prusti_assumptions: Vec<LocalDefId>,
@@ -74,6 +77,7 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
             spec_functions: HashMap::new(),
             procedure_specs: HashMap::new(),
             loop_specs: vec![],
+            loop_variants: vec![],
             type_specs: HashMap::new(),
             prusti_assertions: vec![],
             prusti_assumptions: vec![],
@@ -196,6 +200,12 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
                 typed::LoopSpecification {
                     invariant: *local_id,
                 },
+            );
+        }
+        for local_id in self.loop_variants.iter() {
+            def_spec.loop_variants.insert(
+                local_id.to_def_id(),
+                typed::LoopVariant { variant: *local_id },
             );
         }
     }
@@ -324,7 +334,7 @@ fn get_procedure_spec_ids(def_id: DefId, attrs: &[ast::Attribute]) -> Option<Pro
 
 impl<'a, 'tcx> intravisit::Visitor<'tcx> for SpecCollector<'a, 'tcx> {
     type Map = Map<'tcx>;
-    type NestedFilter =prusti_rustc_interface::middle::hir::nested_filter::All;
+    type NestedFilter = prusti_rustc_interface::middle::hir::nested_filter::All;
 
     fn nested_visit_map(&mut self) -> Self::Map {
         self.tcx.hir()
@@ -366,6 +376,9 @@ impl<'a, 'tcx> intravisit::Visitor<'tcx> for SpecCollector<'a, 'tcx> {
             // Collect loop specifications
             if has_prusti_attr(attrs, "loop_body_invariant_spec") {
                 self.loop_specs.push(local_id);
+            }
+            if has_prusti_attr(attrs, "loop_body_variant_spec") {
+                self.loop_variants.push(local_id);
             }
 
             // TODO: (invariants and trusted flag) visit the struct itself?
@@ -451,8 +464,9 @@ impl<'a, 'tcx> intravisit::Visitor<'tcx> for SpecCollector<'a, 'tcx> {
 fn get_type_id_from_impl_node(node: prusti_rustc_interface::hir::Node) -> Option<DefId> {
     if let prusti_rustc_interface::hir::Node::Item(item) = node {
         if let prusti_rustc_interface::hir::ItemKind::Impl(item_impl) = &item.kind {
-            if let prusti_rustc_interface::hir::TyKind::Path(prusti_rustc_interface::hir::QPath::Resolved(_, path)) =
-                item_impl.self_ty.kind
+            if let prusti_rustc_interface::hir::TyKind::Path(
+                prusti_rustc_interface::hir::QPath::Resolved(_, path),
+            ) = item_impl.self_ty.kind
             {
                 if let prusti_rustc_interface::hir::def::Res::Def(_, def_id) = path.res {
                     return Some(def_id);

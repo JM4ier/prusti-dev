@@ -100,4 +100,72 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
         )?;
         Ok(statement)
     }
+    pub(super) fn encode_loop_variant(
+        &mut self,
+        loop_head: mir::BasicBlock,
+        variant_block: mir::BasicBlock,
+        specification_blocks: Vec<mir::BasicBlock>,
+    ) -> SpannedEncodingResult<vir_high::Statement> {
+        let location = mir::Location {
+            block: variant_block,
+            statement_index: self.mir[variant_block].statements.len(),
+        };
+        // Encode functional specification.
+        let mut encoded_specs = Vec::new();
+        for block in specification_blocks {
+            for statement in &self.mir[block].statements {
+                if let mir::StatementKind::Assign(box (
+                    _,
+                    mir::Rvalue::Aggregate(
+                        box mir::AggregateKind::Closure(cl_def_id, cl_substs),
+                        _,
+                    ),
+                )) = statement.kind
+                {
+                    let specification = self.encoder.get_loop_variants(cl_def_id).unwrap();
+                    let span = self
+                        .encoder
+                        .get_definition_span(specification.variant.to_def_id());
+                    let encoded_specification = self.encoder.set_expression_error_ctxt(
+                        self.encoder.encode_variant_high(
+                            self.mir,
+                            block,
+                            self.def_id,
+                            cl_substs,
+                        )?,
+                        span,
+                        ErrorCtxt::LoopVariant,
+                        self.def_id,
+                    );
+                    encoded_specs.push(encoded_specification);
+                }
+            }
+        }
+        let encoded_back_edges = {
+            let predecessors = self.mir.predecessors();
+            let dominators = self.mir.dominators();
+            predecessors[loop_head]
+                .iter()
+                .filter(|predecessor| dominators.is_dominated_by(**predecessor, loop_head))
+                .map(|back_edge| self.encode_basic_block_label(*back_edge))
+                .collect()
+        };
+        self.init_data.seek_before(location);
+
+        assert_eq!(encoded_specs.len(), 1);
+        let spec = encoded_specs.into_iter().next().unwrap();
+
+        // Construct the info.
+        let loop_variant = vir_high::Statement::loop_variant_no_pos(
+            self.encode_basic_block_label(loop_head),
+            encoded_back_edges,
+            spec,
+        );
+        let statement = self.set_statement_error(
+            location,
+            ErrorCtxt::UnexpectedStorageLive,
+            loop_variant,
+        )?;
+        Ok(statement)
+    }
 }

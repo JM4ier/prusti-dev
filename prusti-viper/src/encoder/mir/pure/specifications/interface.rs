@@ -62,6 +62,14 @@ pub(crate) trait SpecificationEncoderInterface<'tcx> {
         substs: SubstsRef<'tcx>,
     ) -> SpannedEncodingResult<vir_high::Expression>;
 
+    fn encode_variant_high(
+        &self,
+        mir: &mir::Body<'tcx>, // body of the method containing the loop
+        variant_block: mir::BasicBlock, // in which the variant is defined
+        parent_def_id: DefId,
+        substs: SubstsRef<'tcx>,
+    ) -> SpannedEncodingResult<vir_high::Expression>;
+
     fn encode_prusti_operation(
         &self,
         fn_name: &str,
@@ -228,6 +236,96 @@ impl<'v, 'tcx: 'v> SpecificationEncoderInterface<'tcx> for crate::encoder::Encod
         let final_invariant = invariant.unwrap().into_expr().unwrap();
         let final_invariant = final_invariant.simplify();
         Ok(final_invariant)
+    }
+
+    fn encode_variant_high(
+        &self,
+        mir: &mir::Body<'tcx>, // body of the method containing the loop
+        variant_block: mir::BasicBlock, // in which the variant is defined
+        parent_def_id: DefId,
+        substs: SubstsRef<'tcx>,
+    ) -> SpannedEncodingResult<vir_high::Expression> {
+        // identify previous block: there should only be one
+        let predecessors = &mir.predecessors()[variant_block];
+        assert_eq!(predecessors.len(), 1);
+        let predecessor = predecessors[0];
+
+        // identify closure aggregate assign (the invariant body)
+        let closure_assigns = mir.basic_blocks()[variant_block]
+            .statements
+            .iter()
+            .enumerate()
+            .filter_map(|(loc, stmt)| {
+                if let mir::StatementKind::Assign(box (
+                    lhs,
+                    mir::Rvalue::Aggregate(box mir::AggregateKind::Closure(cl_def_id, _), _),
+                )) = stmt.kind
+                {
+                    Some((loc, lhs, cl_def_id))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        // extract relevant data
+        // again there should only be one such assignment because the invariant
+        // spec block should consist *only* of a closure aggregate assign with
+        // its upvars initialised before
+        assert_eq!(closure_assigns.len(), 1);
+        let (inv_loc, inv_cl_expr, inv_def_id) = closure_assigns[0];
+
+        // encode the LHS of closure assign into a VIR expression
+        let mir_encoder = MirEncoder::new(self, mir, parent_def_id);
+        let span =
+            mir_encoder.get_span_of_location(prusti_rustc_interface::middle::mir::Location {
+                block: variant_block,
+                statement_index: inv_loc,
+            });
+        let inv_cl_expr_encoded = self
+            .encode_place_high(mir, inv_cl_expr, Some(span))
+            .with_span(span)?;
+        let closure_borrow_type = vir_high::Type::reference(
+            vir_high::ty::LifetimeConst::erased(),
+            vir_high::ty::Uniqueness::Shared,
+            inv_cl_expr_encoded.get_type().clone(),
+        );
+        // We need this because the specification closure function takes the
+        // itself as a shared argument.
+        let closure_expression_borrow = inv_cl_expr_encoded.addr_of_no_pos(closure_borrow_type);
+
+        // inline variant body
+        let encoded_variant = inline_closure_high(
+            self,
+            inv_def_id,
+            closure_expression_borrow,
+            vec![],
+            parent_def_id,
+            substs,
+        )?
+        .erase_lifetime();
+
+        // backward interpret the body to get rid of the upvars
+        let interpreter = ExpressionBackwardInterpreter::new(
+            self,
+            mir,
+            parent_def_id,
+            PureEncodingContext::Code,
+            parent_def_id,
+            substs,
+        );
+        let variant = run_backward_interpretation_point_to_point(
+             mir,
+             &interpreter,
+             predecessor,
+             variant_block,
+             inv_loc + 1, // include the closure assign itself
+             crate::encoder::mir::pure::interpreter::state::ExprBackwardInterpreterState::new_defined(encoded_variant),
+             crate::encoder::mir::pure::interpreter::state::ExprBackwardInterpreterState::new(None),
+         )?;
+
+        let final_variant = variant.unwrap().into_expr().unwrap().simplify();
+        Ok(final_variant)
     }
 
     fn encode_prusti_operation(

@@ -60,6 +60,8 @@ pub enum ErrorCtxt {
     ExhaleMethodPostcondition,
     /// A generic loop invariant error.
     LoopInvariant,
+    /// A generic loop variant error.
+    LoopVariant,
     /// A Viper `exhale expr` that exhales the permissions of a loop invariant `expr`
     ExhaleLoopInvariantOnEntry,
     ExhaleLoopInvariantAfterIteration,

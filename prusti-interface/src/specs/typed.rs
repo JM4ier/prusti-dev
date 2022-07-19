@@ -1,10 +1,12 @@
 use crate::{environment::Environment, utils::has_trait_bounds_ghost_constraint};
 pub use common::{SpecIdRef, SpecType, SpecificationId};
 use log::trace;
+use prusti_rustc_interface::{
+    hir::def_id::{DefId, LocalDefId},
+    span::Span,
+};
 use prusti_specs::specifications::common;
 use rustc_hash::FxHashMap;
-use prusti_rustc_interface::hir::def_id::{DefId, LocalDefId};
-use prusti_rustc_interface::span::Span;
 use std::{
     collections::HashMap,
     fmt::{Debug, Display, Formatter},
@@ -15,6 +17,7 @@ use std::{
 pub struct DefSpecificationMap {
     pub proc_specs: HashMap<DefId, SpecGraph<ProcedureSpecification>>,
     pub loop_specs: HashMap<DefId, LoopSpecification>,
+    pub loop_variants: HashMap<DefId, LoopVariant>,
     pub type_specs: HashMap<DefId, TypeSpecification>,
     pub prusti_assertions: HashMap<DefId, PrustiAssertion>,
     pub prusti_assumptions: HashMap<DefId, PrustiAssumption>,
@@ -29,6 +32,10 @@ impl DefSpecificationMap {
 
     pub fn get_loop_spec(&self, def_id: &DefId) -> Option<&LoopSpecification> {
         self.loop_specs.get(def_id)
+    }
+
+    pub fn get_loop_variant(&self, def_id: &DefId) -> Option<&LoopVariant> {
+        self.loop_variants.get(def_id)
     }
 
     pub fn get_proc_spec(&self, def_id: &DefId) -> Option<&SpecGraph<ProcedureSpecification>> {
@@ -108,6 +115,11 @@ impl Display for ProcedureSpecificationKind {
 #[derive(Debug, Clone)]
 pub struct LoopSpecification {
     pub invariant: LocalDefId,
+}
+
+#[derive(Debug, Clone)]
+pub struct LoopVariant {
+    pub variant: LocalDefId,
 }
 
 /// Specification of a type.

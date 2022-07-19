@@ -1,5 +1,5 @@
 use prusti_interface::environment::{
-    is_ghost_begin_marker, is_ghost_end_marker, is_loop_invariant_block,
+    is_ghost_begin_marker, is_ghost_end_marker, is_loop_invariant_block, is_loop_variant_block,
     is_marked_specification_block, Procedure,
 };
 use prusti_rustc_interface::{
@@ -20,6 +20,7 @@ pub(super) struct SpecificationBlocks {
     ///
     /// FIXME: Add a check that ensure that the blocks are one after another.
     loop_invariant_blocks: BTreeMap<mir::BasicBlock, LoopInvariantBlocks>,
+    loop_variant_blocks: BTreeMap<mir::BasicBlock, LoopInvariantBlocks>,
 }
 
 /// Information about loop invariant.
@@ -78,7 +79,8 @@ impl SpecificationBlocks {
         let loop_info = procedure.loop_info();
         let predecessors = body.predecessors();
         let mut loop_invariant_blocks = BTreeMap::<_, LoopInvariantBlocks>::new();
-        let mut loop_invariant_blocks_flat = BTreeSet::new();
+        let mut loop_variant_blocks = BTreeMap::<_, LoopInvariantBlocks>::new();
+        let mut loop_spec_blocks_flat = BTreeSet::new();
         // We use reverse_postorder here because we need to make sure that we
         // preserve the order of invariants in which they were specified by the
         // user.
@@ -97,7 +99,23 @@ impl SpecificationBlocks {
                     }
                 });
                 loop_blocks.specification_blocks.push(bb);
-                loop_invariant_blocks_flat.insert(bb);
+                loop_spec_blocks_flat.insert(bb);
+            }
+            if specification_blocks.contains(&bb) && is_loop_variant_block(data, tcx) {
+                let loop_head = loop_info.get_loop_head(bb).unwrap();
+                let loop_blocks = loop_variant_blocks.entry(loop_head).or_insert_with(|| {
+                    assert_eq!(
+                        predecessors[bb].len(),
+                        1,
+                        "The body_invariant should have exactly one predecessor block"
+                    );
+                    LoopInvariantBlocks {
+                        location: predecessors[bb][0],
+                        specification_blocks: Vec::new(),
+                    }
+                });
+                loop_blocks.specification_blocks.push(bb);
+                loop_spec_blocks_flat.insert(bb);
             }
         }
 
@@ -107,7 +125,7 @@ impl SpecificationBlocks {
             if !specification_blocks.contains(&bb) {
                 for successor in body.successors(bb) {
                     if specification_blocks.contains(&successor)
-                        && !loop_invariant_blocks_flat.contains(&successor)
+                        && !loop_spec_blocks_flat.contains(&successor)
                     {
                         specification_entry_blocks.insert(successor);
                     }
@@ -159,6 +177,7 @@ impl SpecificationBlocks {
             specification_blocks,
             specification_entry_blocks,
             loop_invariant_blocks,
+            loop_variant_blocks,
             ghost_blocks,
         }
     }
@@ -177,6 +196,10 @@ impl SpecificationBlocks {
 
     pub(super) fn loop_invariant_blocks(&self) -> &BTreeMap<mir::BasicBlock, LoopInvariantBlocks> {
         &self.loop_invariant_blocks
+    }
+
+    pub(super) fn loop_variant_blocks(&self) -> &BTreeMap<mir::BasicBlock, LoopInvariantBlocks> {
+        &self.loop_variant_blocks
     }
 
     pub(super) fn ghost_blocks(&self) -> &BTreeSet<mir::BasicBlock> {

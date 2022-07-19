@@ -91,6 +91,10 @@ pub(crate) trait SpecificationsInterface<'tcx> {
     /// `prusti::loop_body_invariant_spec` attribute.
     fn get_loop_specs(&self, def_id: DefId) -> Option<typed::LoopSpecification>;
 
+    /// Get the loop variant attached to a function with a
+    /// `prusti::loop_body_variant_spec` attribute.
+    fn get_loop_variants(&self, def_id: DefId) -> Option<typed::LoopVariant>;
+
     /// Get the specifications attached to the `def_id` type.
     fn get_type_specs(&self, def_id: DefId) -> Option<typed::TypeSpecification>;
 
@@ -197,6 +201,14 @@ impl<'v, 'tcx: 'v> SpecificationsInterface<'tcx> for super::super::super::Encode
             .specs
             .borrow()
             .get_loop_spec(&def_id)
+            .cloned()
+    }
+
+    fn get_loop_variants(&self, def_id: DefId) -> Option<typed::LoopVariant> {
+        self.specifications_state
+            .specs
+            .borrow()
+            .get_loop_variant(&def_id)
             .cloned()
     }
 
