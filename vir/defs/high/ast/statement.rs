@@ -125,9 +125,7 @@ pub struct LoopInvariant {
     pub position: Position,
 }
 
-#[display(
-    fmt = "loop-variant (\n{})", spec
-)]
+#[display(fmt = "loop-variant (\n{})", spec)]
 /// The loop variant.
 pub struct LoopVariant {
     pub loop_head: BasicBlockId,
@@ -136,6 +134,8 @@ pub struct LoopVariant {
     pub back_edges: Vec<BasicBlockId>,
     pub spec: Expression,
     pub position: Position,
+    /// The variable that stores the termination measure
+    pub var: VariableDecl,
 }
 
 #[display(fmt = "move {} ← {}", target, source)]

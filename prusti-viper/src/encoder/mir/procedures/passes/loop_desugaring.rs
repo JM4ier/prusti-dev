@@ -5,7 +5,7 @@ use crate::encoder::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 use vir_crate::{
-    common::cfg::Cfg,
+    common::{cfg::Cfg, expression::BinaryOperationHelpers},
     high::{
         self as vir_high,
         ast::{expression::visitors::ExpressionFolder, statement::visitors::StatementFolder},
@@ -127,10 +127,60 @@ fn desugar_loop_variants<'v, 'tcx: 'v>(
 
         assert!(!loop_pred.is_empty());
 
-        let variant_var = todo!();
-        let variant_tmp_var = todo!();
+        let err_ctxt = |enc: &mut Encoder<'v, 'tcx>, stmt| {
+            enc.set_surrounding_error_context_for_statement(
+                stmt,
+                variant.position,
+                ErrorCtxt::LoopVariant,
+            )
+        };
 
-        todo!("loop variant desugaring");
+        let variant_expr = vir_high::Expression::local_no_pos(variant.var);
+
+        let assign_variant = |enc: &mut Encoder<'v, 'tcx>,
+                              block: &mut vir_high::BasicBlock|
+         -> SpannedEncodingResult<()> {
+            let havoc = vir_high::Statement::havoc_no_pos(
+                vir_high::Predicate::owned_non_aliased_no_pos(variant_expr.clone()),
+            );
+
+            let equals = vir_high::Expression::equals(variant_expr.clone(), variant.spec.clone());
+            let assume = vir_high::Statement::assume_no_pos(equals);
+
+            for stmt in [havoc, assume] {
+                block.statements.push(err_ctxt(enc, stmt)?);
+            }
+
+            Ok(())
+        };
+
+        for bb in loop_pred.iter() {
+            let block = procedure.basic_blocks.get_mut(&bb).unwrap();
+            assign_variant(encoder, block)?;
+        }
+
+        for bb in back_edges.iter() {
+            let block = procedure.basic_blocks.get_mut(&bb).unwrap();
+
+            block.statements.push(err_ctxt(
+                encoder,
+                vir_high::Statement::assert_no_pos(vir_high::Expression::less_than(
+                    variant.spec.clone(),
+                    variant_expr.clone(),
+                )),
+            )?);
+            block.statements.push(err_ctxt(
+                encoder,
+                vir_high::Statement::assert_no_pos(vir_high::Expression::greater_equals(
+                    variant.spec.clone(),
+                    vir_high::Expression::constant_no_pos(
+                        vir_high::expression::ConstantValue::Int(0),
+                        vir_high::ty::Type::MInt,
+                    ),
+                )),
+            )?);
+            assign_variant(encoder, block)?;
+        }
     }
     Ok(procedure)
 }

@@ -160,12 +160,10 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
             self.encode_basic_block_label(loop_head),
             encoded_back_edges,
             spec,
+            self.fresh_ghost_variable("loop_variant", vir_high::Type::MInt),
         );
-        let statement = self.set_statement_error(
-            location,
-            ErrorCtxt::UnexpectedStorageLive,
-            loop_variant,
-        )?;
+        let statement =
+            self.set_statement_error(location, ErrorCtxt::UnexpectedStorageLive, loop_variant)?;
         Ok(statement)
     }
 }
