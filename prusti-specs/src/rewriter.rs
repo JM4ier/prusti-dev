@@ -193,7 +193,7 @@ impl AstRewriter {
                 #[prusti::spec_only]
                 #[prusti::loop_body_variant_spec]
                 #[prusti::spec_id = #spec_id_str]
-                || -> i64 {
+                || -> Int {
                     #expr
                 };
             }

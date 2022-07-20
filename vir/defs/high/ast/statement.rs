@@ -136,6 +136,8 @@ pub struct LoopVariant {
     pub position: Position,
     /// The variable that stores the termination measure
     pub var: VariableDecl,
+    /// The place of the loop variant, which is modified
+    pub modified_place: Predicate,
 }
 
 #[display(fmt = "move {} ← {}", target, source)]

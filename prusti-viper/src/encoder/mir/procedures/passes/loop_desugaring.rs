@@ -135,19 +135,16 @@ fn desugar_loop_variants<'v, 'tcx: 'v>(
             )
         };
 
-        let variant_expr = vir_high::Expression::local_no_pos(variant.var);
+        let variant_expr = vir_high::Expression::local_no_pos(variant.var.clone());
 
         let assign_variant = |enc: &mut Encoder<'v, 'tcx>,
                               block: &mut vir_high::BasicBlock|
          -> SpannedEncodingResult<()> {
-            let havoc = vir_high::Statement::havoc_no_pos(
-                vir_high::Predicate::owned_non_aliased_no_pos(variant_expr.clone()),
-            );
-
+            let havoc = vir_high::Statement::havoc_no_pos(variant.modified_place.clone());
             let equals = vir_high::Expression::equals(variant_expr.clone(), variant.spec.clone());
             let assume = vir_high::Statement::assume_no_pos(equals);
 
-            for stmt in [havoc, assume] {
+            for stmt in [/*havoc, */assume] {
                 block.statements.push(err_ctxt(enc, stmt)?);
             }
 
@@ -162,23 +159,18 @@ fn desugar_loop_variants<'v, 'tcx: 'v>(
         for bb in back_edges.iter() {
             let block = procedure.basic_blocks.get_mut(&bb).unwrap();
 
-            block.statements.push(err_ctxt(
-                encoder,
-                vir_high::Statement::assert_no_pos(vir_high::Expression::less_than(
-                    variant.spec.clone(),
-                    variant_expr.clone(),
-                )),
-            )?);
-            block.statements.push(err_ctxt(
-                encoder,
-                vir_high::Statement::assert_no_pos(vir_high::Expression::greater_equals(
+            let expr = vir_high::Expression::and(
+                vir_high::Expression::less_than(variant.spec.clone(), variant_expr.clone()),
+                vir_high::Expression::greater_equals(
                     variant.spec.clone(),
                     vir_high::Expression::constant_no_pos(
                         vir_high::expression::ConstantValue::Int(0),
-                        vir_high::ty::Type::MInt,
+                        variant.var.ty.clone(),
                     ),
-                )),
-            )?);
+                ),
+            );
+            let assert = err_ctxt(encoder, vir_high::Statement::assert_no_pos(expr))?;
+            block.statements.push(assert);
             assign_variant(encoder, block)?;
         }
     }

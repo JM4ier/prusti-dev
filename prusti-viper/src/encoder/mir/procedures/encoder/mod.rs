@@ -1808,7 +1808,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 if let Some(blocks) = loop_variant_blocks.remove(loop_head) {
                     (blocks.location, blocks.specification_blocks)
                 } else {
-                    (*loop_head, Vec::new())
+                    continue;
                 };
             let statement =
                 self.encode_loop_variant(*loop_head, variant_location, specification_blocks)?;

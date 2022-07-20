@@ -155,12 +155,23 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
         assert_eq!(encoded_specs.len(), 1);
         let spec = encoded_specs.into_iter().next().unwrap();
 
+        let var = self.fresh_ghost_variable(
+            "loop_variant",
+            vir_high::Type::Int(vir_high::ty::Int::Unbounded),
+        );
+        let modified_place = vir_high::Predicate::memory_block_stack_no_pos(
+            vir_high::Expression::local_no_pos(var.clone()),
+            self.encoder
+                .encode_type_size_expression_vir(var.ty.clone())?,
+        );
+
         // Construct the info.
         let loop_variant = vir_high::Statement::loop_variant_no_pos(
             self.encode_basic_block_label(loop_head),
             encoded_back_edges,
             spec,
-            self.fresh_ghost_variable("loop_variant", vir_high::Type::MInt),
+            var,
+            modified_place,
         );
         let statement =
             self.set_statement_error(location, ErrorCtxt::UnexpectedStorageLive, loop_variant)?;

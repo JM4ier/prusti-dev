@@ -7,7 +7,7 @@ use prusti_contracts::*;
 fn main() {
     let mut x = 10;
     while x > 0 {
-        body_variant!(x);
+        body_variant!(Int::new(x));
         x -= 1;
     }
 }
