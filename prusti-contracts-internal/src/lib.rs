@@ -96,6 +96,11 @@ pub fn ghost_constraint(attr: TokenStream, tokens: TokenStream) -> TokenStream {
     .into()
 }
 
+#[proc_macro_attribute]
+pub fn terminates(attr: TokenStream, tokens: TokenStream) -> TokenStream {
+    rewrite_prusti_attributes(SpecAttributeKind::Terminates, attr.into(), tokens.into()).into()
+}
+
 #[proc_macro]
 pub fn ghost(tokens: TokenStream) -> TokenStream {
     prusti_specs::ghost(tokens.into()).into()

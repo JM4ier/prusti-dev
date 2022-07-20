@@ -36,6 +36,7 @@ struct ProcedureSpecRefs {
     pure: bool,
     abstract_predicate: bool,
     trusted: bool,
+    terminates: bool,
 }
 
 #[derive(Debug, Default)]
@@ -142,6 +143,7 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
             }
 
             spec.set_trusted(refs.trusted);
+            spec.set_terminates(refs.terminates);
 
             // We do not want to create an empty kind.
             // This would lead to refinement inheritance if there is a trait involved.
@@ -317,13 +319,15 @@ fn get_procedure_spec_ids(def_id: DefId, attrs: &[ast::Attribute]) -> Option<Pro
     );
 
     let pure = has_prusti_attr(attrs, "pure");
+    let terminates = has_prusti_attr(attrs, "terminates") || pure;
     let trusted = has_prusti_attr(attrs, "trusted");
     let abstract_predicate = has_abstract_predicate_attr(attrs);
 
-    if abstract_predicate || pure || trusted || !spec_id_refs.is_empty() {
+    if abstract_predicate || pure || trusted || terminates || !spec_id_refs.is_empty() {
         Some(ProcedureSpecRefs {
             spec_id_refs,
             pure,
+            terminates,
             abstract_predicate,
             trusted,
         })

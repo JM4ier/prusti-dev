@@ -85,6 +85,8 @@ pub(crate) trait SpecificationsInterface<'tcx> {
 
     fn is_trusted(&self, def_id: DefId, substs: Option<SubstsRef<'tcx>>) -> bool;
 
+    fn terminates(&self, def_id: DefId, substs: Option<SubstsRef<'tcx>>) -> bool;
+
     fn get_predicate_body(&self, def_id: DefId, substs: SubstsRef<'tcx>) -> Option<LocalDefId>;
 
     /// Get the loop invariant attached to a function with a
@@ -181,6 +183,24 @@ impl<'v, 'tcx: 'v> SpecificationsInterface<'tcx> for super::super::super::Encode
             .and_then(|spec| spec.trusted.extract_with_selective_replacement().copied())
             .unwrap_or(false);
         trace!("is_trusted {:?} = {}", query, result);
+        result
+    }
+
+    fn terminates(&self, def_id: DefId, substs: Option<SubstsRef<'tcx>>) -> bool {
+        let substs = substs.unwrap_or_else(|| self.env().identity_substs(def_id));
+        let query = SpecQuery::GetProcKind(def_id, substs);
+        let result = self
+            .specifications_state
+            .specs
+            .borrow_mut()
+            .get_and_refine_proc_spec(self.env(), query)
+            .and_then(|spec| {
+                spec.terminates
+                    .extract_with_selective_replacement()
+                    .copied()
+            })
+            .unwrap_or(false);
+        trace!("terminates {:?} = {}", query, result);
         result
     }
 

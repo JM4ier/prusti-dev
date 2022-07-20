@@ -63,6 +63,7 @@ mod lifetimes;
 mod loops;
 mod scc;
 mod specification_blocks;
+mod termination;
 
 pub(super) fn encode_procedure<'v, 'tcx: 'v>(
     encoder: &mut Encoder<'v, 'tcx>,
@@ -426,6 +427,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 self.encode_basic_block(procedure_builder, bb, data)?;
             }
         }
+        self.encode_termination()?;
         assert!(
             self.loop_invariant_encoding.is_empty(),
             "not consumed loop invariant: {:?}",

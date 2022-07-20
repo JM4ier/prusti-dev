@@ -4,10 +4,10 @@
 
 use prusti_contracts::*;
 
+#[terminates]
 fn main() {
-    let mut x = 10;
-    while x > 0 {
-        body_variant!(Int::new(x));
-        x -= 1;
+    while false {
+        body_invariant!(false);
+        body_variant!(Int::new(0));
     }
 }

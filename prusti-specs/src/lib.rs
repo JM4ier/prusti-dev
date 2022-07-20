@@ -71,6 +71,7 @@ fn extract_prusti_attributes(
                     }
                     // Nothing to do for attributes without arguments.
                     SpecAttributeKind::Pure
+                    | SpecAttributeKind::Terminates
                     | SpecAttributeKind::Trusted
                     | SpecAttributeKind::Predicate => {
                         assert!(attr.tokens.is_empty(), "Unexpected shape of an attribute.");
@@ -146,6 +147,7 @@ fn generate_spec_and_assertions(
             SpecAttributeKind::AfterExpiry => generate_for_after_expiry(attr_tokens, item),
             SpecAttributeKind::AssertOnExpiry => generate_for_assert_on_expiry(attr_tokens, item),
             SpecAttributeKind::Pure => generate_for_pure(attr_tokens, item),
+            SpecAttributeKind::Terminates => generate_for_terminates(attr_tokens, item),
             SpecAttributeKind::Trusted => generate_for_trusted(attr_tokens, item),
             // Predicates are handled separately below; the entry in the SpecAttributeKind enum
             // only exists so we successfully parse it and emit an error in
@@ -225,6 +227,23 @@ fn generate_for_assert_on_expiry(attr: TokenStream, item: &untyped::AnyFnItem) -
                 #[prusti::assert_pledge_spec_id_ref_rhs = #spec_id_rhs_str]
             },
         ],
+    ))
+}
+
+/// Generate spec items and attributes to typecheck and later retrieve "terminates" annotations.
+fn generate_for_terminates(attr: TokenStream, item: &untyped::AnyFnItem) -> GeneratedResult {
+    if !attr.is_empty() {
+        return Err(syn::Error::new(
+            attr.span(),
+            "the `#[terminates]` attribute does not take parameters",
+        ));
+    }
+
+    Ok((
+        vec![],
+        vec![parse_quote_spanned! {item.span()=>
+            #[prusti::terminates]
+        }],
     ))
 }
 

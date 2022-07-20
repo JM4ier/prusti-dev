@@ -71,6 +71,7 @@ pub struct ProcedureSpecification {
     pub posts: SpecificationItem<Vec<LocalDefId>>,
     pub pledges: SpecificationItem<Vec<Pledge>>,
     pub trusted: SpecificationItem<bool>,
+    pub terminates: SpecificationItem<bool>,
 }
 
 impl ProcedureSpecification {
@@ -84,6 +85,7 @@ impl ProcedureSpecification {
             posts: SpecificationItem::Empty,
             pledges: SpecificationItem::Empty,
             trusted: SpecificationItem::Inherent(false),
+            terminates: SpecificationItem::Inherent(false),
         }
     }
 }
@@ -303,6 +305,14 @@ impl SpecGraph<ProcedureSpecification> {
         self.specs_with_constraints
             .values_mut()
             .for_each(|s| s.trusted.set(trusted));
+    }
+
+    /// Sets the termination flag for the base spec and all constrained specs.
+    pub fn set_terminates(&mut self, terminates: bool) {
+        self.base_spec.terminates.set(terminates);
+        self.specs_with_constraints
+            .values_mut()
+            .for_each(|s| s.terminates.set(terminates));
     }
 
     /// Sets the [ProcedureSpecificationKind] for the base spec and all constrained specs.
@@ -612,6 +622,7 @@ impl Refinable for ProcedureSpecification {
             pledges: self.pledges.refine(&other.pledges),
             kind: self.kind.refine(&other.kind),
             trusted: self.trusted.refine(&other.trusted),
+            terminates: self.terminates.refine(&other.terminates),
         }
     }
 }
