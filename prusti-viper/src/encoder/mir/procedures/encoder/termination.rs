@@ -18,9 +18,6 @@ use vir_crate::high::{self as vir_high};
 
 use vir_high::builders::procedure::ProcedureBuilder;
 
-// acyclic callgraph: can use termination measures etc with already verified functions
-// strict order
-
 impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
     fn needs_termination(&self, bb: BasicBlock) -> bool {
         let function_termination = self.encoder.terminates(self.def_id, None);
