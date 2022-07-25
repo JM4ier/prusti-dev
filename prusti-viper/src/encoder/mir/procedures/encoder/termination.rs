@@ -8,7 +8,10 @@ use crate::encoder::{
 };
 use prusti_rustc_interface::{
     data_structures::graph::WithSuccessors,
-    middle::mir::{BasicBlock, TerminatorKind, START_BLOCK},
+    middle::{
+        mir::{self, BasicBlock, TerminatorKind, START_BLOCK},
+        ty,
+    },
 };
 use std::collections::HashSet;
 use vir_crate::high::{self as vir_high};
@@ -34,7 +37,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 continue;
             }
 
-            log::debug!("analyzing termination of {:?}, {:?}", bb, self.mir.predecessors()[bb]);
+            log::debug!(
+                "analyzing termination of {:?}, {:?}",
+                bb,
+                self.mir.predecessors()[bb]
+            );
 
             let all_pred_term = self.mir.predecessors()[bb]
                 .iter()
@@ -47,13 +54,27 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
 
             let has_loop_variant = self.mir.basic_blocks().iter_enumerated().any(|(bb1, _)| {
                 let same_loop = bb == bb1 || dom.immediate_dominator(bb1) == bb;
-                same_loop && self.specification_blocks.loop_variant_blocks().contains_key(&bb1)
+                same_loop
+                    && self
+                        .specification_blocks
+                        .loop_variant_blocks()
+                        .contains_key(&bb1)
             });
 
             if all_pred_term || (non_dom_term && has_loop_variant) {
                 terminates.insert(bb);
                 let continues = match self.mir.basic_blocks()[bb].terminator().kind {
-                    TerminatorKind::Call { .. } => todo!("check if function is pure"),
+                    TerminatorKind::Call {
+                        func: mir::Operand::Constant(box mir::Constant { literal, .. }),
+                        ..
+                    } => {
+                        if let ty::TyKind::FnDef(def_id, _call_substs) = literal.ty().kind() {
+                            self.encoder.terminates(*def_id, None)
+                        } else {
+                            unimplemented!();
+                        }
+                    }
+                    TerminatorKind::Call { .. } => unimplemented!(),
                     TerminatorKind::InlineAsm { .. } => false,
                     _ => true,
                 };
