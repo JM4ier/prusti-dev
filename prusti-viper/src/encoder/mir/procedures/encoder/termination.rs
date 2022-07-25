@@ -34,14 +34,23 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 continue;
             }
 
-            log::debug!("hahaxz: {:?}", bb);
-            log::debug!("{:?}", self.mir.predecessors()[bb]);
+            log::debug!("analyzing termination of {:?}, {:?}", bb, self.mir.predecessors()[bb]);
 
-            if self.mir.predecessors()[bb]
+            let all_pred_term = self.mir.predecessors()[bb]
                 .iter()
-                .all(|bb| terminates.contains(bb))
-            // additional condition: predecessors *excluding* back edges terminate, and there is a loop variant in the loop
-            {
+                .all(|bb| terminates.contains(bb));
+
+            let dom = self.mir.dominators();
+            let non_dom_term = self.mir.predecessors()[bb]
+                .iter()
+                .all(|pred| dom.is_dominated_by(*pred, bb) || terminates.contains(pred));
+
+            let has_loop_variant = self.mir.basic_blocks().iter_enumerated().any(|(bb1, _)| {
+                let same_loop = bb == bb1 || dom.immediate_dominator(bb1) == bb;
+                same_loop && self.specification_blocks.loop_variant_blocks().contains_key(&bb1)
+            });
+
+            if all_pred_term || (non_dom_term && has_loop_variant) {
                 terminates.insert(bb);
                 let continues = match self.mir.basic_blocks()[bb].terminator().kind {
                     TerminatorKind::Call { .. } => todo!("check if function is pure"),
@@ -55,12 +64,10 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 }
             }
         }
-        log::debug!("TERMINATING: {:?}", terminates);
+        log::debug!("terminating blocks: {:?}", terminates);
         Ok(terminates)
     }
-    pub fn encode_termination(
-        &mut self,
-    ) -> SpannedEncodingResult<HashSet<BasicBlock>> {
+    pub fn encode_termination(&mut self) -> SpannedEncodingResult<HashSet<BasicBlock>> {
         let terminating = self.find_terminating_blocks()?;
         let mut needs_unreachability = HashSet::new();
         for (bb, _) in self.mir.basic_blocks().iter_enumerated() {
