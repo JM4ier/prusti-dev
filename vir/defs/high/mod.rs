@@ -20,8 +20,8 @@ pub use self::{
         rvalue::{Operand, OperandKind, Rvalue},
         statement::{
             Assert, Assign, Assume, BorShorten, CloseFracRef, CloseMutRef, Comment, Consume,
-            CopyPlace, DeadInclusion, DeadLifetime, EndLft, Exhale, Havoc, Inhale, LeakAll,
-            LifetimeReturn, LifetimeTake, LoopInvariant, LoopVariant, MovePlace, NewLft,
+            CopyPlace, DeadInclusion, DeadLifetime, EndLft, Exhale, GhostAssign, Havoc, Inhale,
+            LeakAll, LifetimeReturn, LifetimeTake, LoopInvariant, LoopVariant, MovePlace, NewLft,
             ObtainMutRef, OldLabel, OpenFracRef, OpenMutRef, SetUnionVariant, Statement,
             WriteAddress, WritePlace,
         },

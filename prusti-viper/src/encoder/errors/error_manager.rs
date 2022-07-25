@@ -160,6 +160,8 @@ pub enum ErrorCtxt {
     /// The state that fold-unfold algorithm deduced as unreachable, is actually
     /// reachable.
     UnreachableFoldingState,
+    /// If termination of a block isn't proven (but needs to), this is the error if the block is actually reached
+    TerminationUnexpectedReachable,
 }
 
 /// The error manager

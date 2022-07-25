@@ -8,10 +8,15 @@ use crate::encoder::{
 };
 use prusti_rustc_interface::{
     data_structures::graph::WithSuccessors,
-    middle::mir::{BasicBlock, BasicBlockData, RetagKind, StatementKind, TerminatorKind},
+    middle::mir::{BasicBlock, TerminatorKind, START_BLOCK},
 };
 use std::collections::HashSet;
 use vir_crate::high::{self as vir_high};
+
+use vir_high::builders::procedure::ProcedureBuilder;
+
+// acyclic callgraph: can use termination measures etc with already verified functions
+// strict order
 
 impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
     fn needs_termination(&self, bb: BasicBlock) -> bool {
@@ -19,27 +24,18 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
         let ghost_block = self.specification_blocks.is_ghost_block(bb);
         function_termination || ghost_block
     }
-    fn find_entry_point(&self) -> BasicBlock {
-        self.mir
-            .basic_blocks()
-            .iter_enumerated()
-            .filter(|(_, bb)| {
-                bb.statements
-                    .iter()
-                    .any(|s| matches!(s.kind, StatementKind::Retag(RetagKind::FnEntry, _)))
-            })
-            .map(|(bb, _)| bb)
-            .next()
-            .unwrap()
-    }
-    fn find_terminating_blocks(&self) -> HashSet<BasicBlock> {
+    /// returns block that terminate, either by having no loops and function calls / or if termination of that is ensured by loop variants or termination measures on the call
+    fn find_terminating_blocks(&self) -> SpannedEncodingResult<HashSet<BasicBlock>> {
         let mut queue = Vec::new();
         let mut terminates = HashSet::new();
-        queue.push(self.find_entry_point());
+        queue.push(START_BLOCK);
         while let Some(bb) = queue.pop() {
             if terminates.contains(&bb) {
                 continue;
             }
+
+            log::debug!("hahaxz: {:?}", bb);
+            log::debug!("{:?}", self.mir.predecessors()[bb]);
 
             if self.mir.predecessors()[bb]
                 .iter()
@@ -59,19 +55,24 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 }
             }
         }
-        terminates
+        log::debug!("TERMINATING: {:?}", terminates);
+        Ok(terminates)
     }
-    pub fn encode_termination(&mut self) -> SpannedEncodingResult<()> {
-        let terminating = self.find_terminating_blocks();
+    pub fn encode_termination(
+        &mut self,
+    ) -> SpannedEncodingResult<HashSet<BasicBlock>> {
+        let terminating = self.find_terminating_blocks()?;
+        let mut needs_unreachability = HashSet::new();
         for (bb, _) in self.mir.basic_blocks().iter_enumerated() {
-            if self.needs_termination(bb) && !terminating.contains(&bb) {
-                /// if a block needs termination but isn't guaranteed to terminate,
-                /// the only valid possibility is if the block is never entered.
-                ///
-                /// TODO: insert `assert false` at the begin of the block
-                todo!()
+            if self.needs_termination(bb)
+                && !terminating.contains(&bb)
+                && self.reachable_blocks.contains(&bb)
+            {
+                // if a block needs termination but isn't guaranteed to terminate,
+                // the only valid possibility is if the block is never entered.
+                needs_unreachability.insert(bb);
             }
         }
-        todo!()
+        Ok(needs_unreachability)
     }
 }

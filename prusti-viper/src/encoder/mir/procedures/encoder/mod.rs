@@ -418,16 +418,16 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         procedure_builder.set_entry(entry_label);
         self.encode_specification_blocks()?;
         self.reachable_blocks.insert(self.mir.start_node());
+        let term = self.encode_termination()?;
         for (bb, data) in
             prusti_rustc_interface::middle::mir::traversal::reverse_postorder(self.mir)
         {
             if !self.specification_blocks.is_specification_block(bb)
                 && self.reachable_blocks.contains(&bb)
             {
-                self.encode_basic_block(procedure_builder, bb, data)?;
+                self.encode_basic_block(procedure_builder, bb, data, term.contains(&bb))?;
             }
         }
-        self.encode_termination()?;
         assert!(
             self.loop_invariant_encoding.is_empty(),
             "not consumed loop invariant: {:?}",
@@ -441,6 +441,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         procedure_builder: &mut ProcedureBuilder,
         bb: mir::BasicBlock,
         data: &mir::BasicBlockData<'tcx>,
+        unreachable: bool,
     ) -> SpannedEncodingResult<()> {
         self.derived_lifetimes_yet_to_kill.clear();
         self.reborrow_lifetimes_to_remove_for_block
@@ -449,6 +450,17 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         self.current_basic_block = Some(bb);
         let label = self.encode_basic_block_label(bb);
         let mut block_builder = procedure_builder.create_basic_block_builder(label);
+        if unreachable {
+            // at the moment these assert(false) are generated for blocks where termination is needed but is not proven by variants etc
+            // i.e. if these blocks are reachable it violates the termination constraint
+            let assert = self.encoder.set_statement_error_ctxt(
+                vir_high::Statement::assert_no_pos(false.into()),
+                self.mir.span, // TODO: more specific span (of BB instead of whole body)
+                ErrorCtxt::TerminationUnexpectedReachable,
+                self.def_id,
+            )?;
+            block_builder.add_statement(assert);
+        }
         let mir::BasicBlockData {
             statements,
             terminator,

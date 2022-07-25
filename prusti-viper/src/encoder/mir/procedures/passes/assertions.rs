@@ -43,6 +43,7 @@ pub(in super::super) fn propagate_assertions_back<'v, 'tcx: 'v>(
                         | vir_high::Statement::WritePlace(_)
                         | vir_high::Statement::WriteAddress(_)
                         | vir_high::Statement::Assign(_)
+                        | vir_high::Statement::GhostAssign(_)
                         | vir_high::Statement::LeakAll(_)
                         | vir_high::Statement::SetUnionVariant(_)
                         | vir_high::Statement::NewLft(_)

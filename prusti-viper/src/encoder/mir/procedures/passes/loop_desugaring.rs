@@ -137,17 +137,23 @@ fn desugar_loop_variants<'v, 'tcx: 'v>(
 
         let variant_expr = vir_high::Expression::local_no_pos(variant.var.clone());
 
+        // variant = expr
+        // loop {
+        //      assert(expr < variant)
+        //      assert(expr >= 0)
+        //      variant = expr;
+        // }
+
         let assign_variant = |enc: &mut Encoder<'v, 'tcx>,
                               block: &mut vir_high::BasicBlock|
          -> SpannedEncodingResult<()> {
-            let havoc = vir_high::Statement::havoc_no_pos(variant.modified_place.clone());
-            let equals = vir_high::Expression::equals(variant_expr.clone(), variant.spec.clone());
-            let assume = vir_high::Statement::assume_no_pos(equals);
-
-            for stmt in [/*havoc, */assume] {
-                block.statements.push(err_ctxt(enc, stmt)?);
-            }
-
+            block.statements.push(err_ctxt(
+                enc,
+                vir_high::Statement::ghost_assign_no_pos(
+                    variant_expr.clone(),
+                    variant.spec.clone(),
+                ),
+            )?);
             Ok(())
         };
 

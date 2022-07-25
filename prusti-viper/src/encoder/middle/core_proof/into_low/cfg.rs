@@ -556,6 +556,12 @@ impl IntoLow for vir_mid::Statement {
                 )?;
                 Ok(statements)
             }
+            Self::GhostAssign(statement) => {
+                let mut stmts = Vec::new();
+                let value = statement.value.to_procedure_snapshot(lowerer)?;
+                let update = lowerer.encode_snapshot_update(&mut stmts, &statement.target, value, statement.position)?;
+                Ok(stmts)
+            }
             Self::NewLft(statement) => {
                 let targets = vec![vir_low::Expression::local_no_pos(
                     statement.target.to_procedure_snapshot(lowerer)?,

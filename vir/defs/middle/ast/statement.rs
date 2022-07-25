@@ -33,6 +33,7 @@ pub enum Statement {
     WritePlace(WritePlace),
     WriteAddress(WriteAddress),
     Assign(Assign),
+    GhostAssign(GhostAssign),
     NewLft(NewLft),
     EndLft(EndLft),
     DeadReference(DeadReference),
@@ -280,6 +281,13 @@ pub struct WriteAddress {
 pub struct Assign {
     pub target: Expression,
     pub value: Rvalue,
+    pub position: Position,
+}
+
+#[display(fmt = "ghost_assign {} := {}", target, value)]
+pub struct GhostAssign {
+    pub target: Expression,
+    pub value: Expression,
     pub position: Position,
 }
 
