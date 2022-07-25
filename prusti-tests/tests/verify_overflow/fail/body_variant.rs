@@ -26,3 +26,14 @@ fn ghost_nontermination_error() {
         loop {} //~ ERROR
     };
 }
+
+#[pure]
+fn pure_fn() -> u32 {
+    42
+}
+
+fn allows_pure_calls() {
+    ghost! {
+        let x = pure_fn();
+    };
+}
