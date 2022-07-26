@@ -455,7 +455,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             // i.e. if these blocks are reachable it violates the termination constraint
             let assert = self.encoder.set_statement_error_ctxt(
                 vir_high::Statement::assert_no_pos(false.into()),
-                self.mir.span, // TODO: more specific span (of BB instead of whole body)
+                data.terminator().source_info.span, // is this the right location to report the error?
                 ErrorCtxt::TerminationUnexpectedReachable,
                 self.def_id,
             )?;

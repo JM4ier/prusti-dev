@@ -634,6 +634,13 @@ impl<'tcx> ErrorManager<'tcx> {
                 ).set_failing_assertion(opt_cause_span)
             }
 
+            ("assert.failed:assertion.false", ErrorCtxt::TerminationUnexpectedReachable) => {
+                PrustiError::verification(
+                    "the code might not terminate".to_string(),
+                    error_span
+                ).set_failing_assertion(opt_cause_span)
+            }
+
             (full_err_id, ErrorCtxt::Unexpected) => {
                 PrustiError::internal(
                     format!(

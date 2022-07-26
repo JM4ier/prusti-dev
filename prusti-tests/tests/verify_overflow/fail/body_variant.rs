@@ -27,13 +27,30 @@ fn ghost_nontermination_error() {
     };
 }
 
+#[terminates]
+fn non_reachable_nontermination_is_allowed() {
+    if false {
+        loop {}
+    }
+}
+
 #[pure]
 fn pure_fn() -> u32 {
+    42
+}
+
+fn impure_fn() -> u32 {
     42
 }
 
 fn allows_pure_calls() {
     ghost! {
         let x = pure_fn();
+    };
+}
+
+fn disallows_impure_calls() {
+    ghost! {
+        let x = impure_fn(); //~ ERROR: Only pure function calls are allowed in ghost blocks.
     };
 }
