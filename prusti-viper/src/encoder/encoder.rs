@@ -83,9 +83,8 @@ pub struct Encoder<'v, 'tcx: 'v> {
     pub(super) high_type_encoder_state: HighTypeEncoderState<'tcx>,
     pub(super) pure_function_encoder_state: PureFunctionEncoderState<'v, 'tcx>,
     pub(super) specifications_state: SpecificationsState<'tcx>,
-    // callgraph state
-    //  funs called in body & pre/post conditions / termination measures
     pub(super) call_dependency_state: CallDependencyState,
+    // TODO: add funs called in body & pre/post conditions / termination measures
     spec_functions: RefCell<FxHashMap<ProcedureDefId, Vec<vir::FunctionIdentifier>>>,
     type_discriminant_funcs: RefCell<FxHashMap<String, vir::FunctionIdentifier>>,
     type_cast_functions: RefCell<FxHashMap<(ty::Ty<'tcx>, ty::Ty<'tcx>), vir::FunctionIdentifier>>,

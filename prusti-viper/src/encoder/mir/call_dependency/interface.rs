@@ -1,24 +1,13 @@
-use log::trace;
-use prusti_interface::{
-    environment::Environment,
-    specs::{
-        typed,
-        typed::{DefSpecificationMap, ProcedureSpecification, ProcedureSpecificationKind},
-    },
-    utils::has_spec_only_attr,
-};
+use prusti_interface::{self, environment::Environment};
 use prusti_rustc_interface::{
-    data_structures::graph::WithSuccessors,
-    hir::def_id::{DefId, LocalDefId},
+    hir::def_id::DefId,
     middle::{
-        mir::{self, BasicBlock, TerminatorKind, START_BLOCK},
+        mir::{self, TerminatorKind},
         ty,
-        ty::subst::SubstsRef,
     },
-    span::Span,
 };
 use rustc_hash::{FxHashMap, FxHashSet};
-use std::{cell::RefCell, collections::HashSet, hash::Hash};
+use std::cell::RefCell;
 
 // FIXME? take substs into account
 

@@ -1,10 +1,7 @@
+use super::super::super::call_dependency::CallDependencyInterface;
 use crate::encoder::{
-    errors::{ErrorCtxt, SpannedEncodingError, SpannedEncodingResult},
-    mir::{
-        errors::ErrorInterface, places::PlacesEncoderInterface,
-        pure::SpecificationEncoderInterface, spans::SpanInterface,
-        specifications::SpecificationsInterface, type_layouts::MirTypeLayoutsEncoderInterface,
-    },
+    errors::{SpannedEncodingError, SpannedEncodingResult},
+    mir::specifications::SpecificationsInterface,
 };
 use prusti_rustc_interface::{
     data_structures::graph::WithSuccessors,
@@ -13,11 +10,7 @@ use prusti_rustc_interface::{
         ty,
     },
 };
-use super::super::super::call_dependency::CallDependencyInterface;
 use std::collections::HashSet;
-use vir_crate::high::{self as vir_high};
-
-use vir_high::builders::procedure::ProcedureBuilder;
 
 impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
     fn needs_termination(&self, bb: BasicBlock) -> bool {
@@ -102,7 +95,10 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
 
         let called_fns = self.encoder.get_all_callees(self.def_id);
         if called_fns.contains(&self.def_id) {
-            panic!("oof ouch owie, recursion");
+            Err(SpannedEncodingError::unsupported(
+                "Recursive terminating function",
+                self.mir.span,
+            ))?;
         }
 
         Ok(needs_unreachability)
