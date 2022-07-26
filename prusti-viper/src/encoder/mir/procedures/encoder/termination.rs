@@ -59,7 +59,6 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
             });
 
             if all_pred_term || (non_dom_term && has_loop_variant) {
-                terminates.insert(bb);
                 let continues = match self.mir.basic_blocks()[bb].terminator().kind {
                     TerminatorKind::Call {
                         func: mir::Operand::Constant(box mir::Constant { literal, .. }),
@@ -76,6 +75,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                     _ => true,
                 };
                 if continues {
+                    terminates.insert(bb);
                     for bb in self.mir.successors(bb) {
                         queue.push(bb);
                     }
