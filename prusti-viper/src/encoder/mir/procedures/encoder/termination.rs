@@ -13,6 +13,7 @@ use prusti_rustc_interface::{
         ty,
     },
 };
+use super::super::super::call_dependency::CallDependencyInterface;
 use std::collections::HashSet;
 use vir_crate::high::{self as vir_high};
 
@@ -98,6 +99,12 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 needs_unreachability.insert(bb);
             }
         }
+
+        let called_fns = self.encoder.get_all_callees(self.def_id);
+        if called_fns.contains(&self.def_id) {
+            panic!("oof ouch owie, recursion");
+        }
+
         Ok(needs_unreachability)
     }
 }

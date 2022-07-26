@@ -70,6 +70,7 @@ fn nonterminating_fn() {
 #[terminates]
 fn terminating_fns_can_only_call_terminating_fns_2() {
     nonterminating_fn(); //~ ERROR
+    let x = 5;
 }
 
 #[terminates]

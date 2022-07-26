@@ -57,6 +57,9 @@ use super::mir::{
     },
     specifications::{
         SpecificationsState, SpecificationsInterface,
+    },
+    call_dependency:: {
+        CallDependencyState, CallDependencyInterface
     }
 };
 use super::high::types::{HighTypeEncoderState, HighTypeEncoderInterface};
@@ -82,6 +85,7 @@ pub struct Encoder<'v, 'tcx: 'v> {
     pub(super) specifications_state: SpecificationsState<'tcx>,
     // callgraph state
     //  funs called in body & pre/post conditions / termination measures
+    pub(super) call_dependency_state: CallDependencyState,
     spec_functions: RefCell<FxHashMap<ProcedureDefId, Vec<vir::FunctionIdentifier>>>,
     type_discriminant_funcs: RefCell<FxHashMap<String, vir::FunctionIdentifier>>,
     type_cast_functions: RefCell<FxHashMap<(ty::Ty<'tcx>, ty::Ty<'tcx>), vir::FunctionIdentifier>>,
@@ -147,6 +151,7 @@ impl<'v, 'tcx> Encoder<'v, 'tcx> {
             mir_procedure_encoder_state: Default::default(),
             mir_type_layouts_encoder_state: Default::default(),
             mid_core_proof_encoder_state: Default::default(),
+            call_dependency_state: Default::default(),
             procedures: RefCell::new(FxHashMap::default()),
             contracts_encoder_state: Default::default(),
             mir_type_encoder_state: Default::default(),
