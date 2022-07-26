@@ -15,6 +15,7 @@ use prusti_rustc_interface::{
     },
     middle::{
         mir,
+        mir::TerminatorKind,
         ty::{
             self,
             subst::{Subst, SubstsRef},
@@ -524,12 +525,40 @@ impl<'tcx> Environment<'tcx> {
         called_def_id: ProcedureDefId,
         call_substs: SubstsRef<'tcx>,
     ) -> bool {
-        let param_env = self.tcx.param_env(caller_def_id);
-        let instance =
-            traits::resolve_instance(self.tcx, param_env.and((called_def_id, call_substs)))
-                .unwrap();
-        self.tcx
-            .mir_callgraph_reachable((instance.unwrap(), caller_def_id.expect_local()))
+        if caller_def_id == called_def_id {
+            // special case as `mir_callgraph_reachable` doesn't allow checking reachability from a function to itself
+            let caller = self.get_procedure(caller_def_id);
+            for block in caller.get_mir().basic_blocks() {
+                let (&func, substs_ref) = match block.terminator().kind {
+                    TerminatorKind::Call {
+                        func: mir::Operand::Constant(box mir::Constant { literal, .. }),
+                        ..
+                    } => {
+                        if let ty::TyKind::FnDef(def_id, substs_ref) = literal.ty().kind() {
+                            (def_id, substs_ref)
+                        } else {
+                            continue;
+                        }
+                    }
+                    _ => continue,
+                };
+                if func == caller_def_id {
+                    return true;
+                }
+                let reachable = self.is_callgraph_reachable(func, called_def_id, substs_ref);
+                if reachable {
+                    return true;
+                }
+            }
+            false
+        } else {
+            let param_env = self.tcx.param_env(caller_def_id);
+            let instance =
+                traits::resolve_instance(self.tcx, param_env.and((called_def_id, call_substs)))
+                    .unwrap();
+            self.tcx
+                .mir_callgraph_reachable((instance.unwrap(), caller_def_id.expect_local()))
+        }
     }
 
     /// Given a call to `called_def_id` from within `caller_def_id`, returns
