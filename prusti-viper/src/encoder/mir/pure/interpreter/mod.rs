@@ -427,6 +427,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ExpressionBackwardInterpreter<'p, 'v, 'tcx> {
         states: FxHashMap<mir::BasicBlock, &ExprBackwardInterpreterState>,
         span: Span,
     ) -> SpannedEncodingResult<ExprBackwardInterpreterState> {
+        // TODO(jonas) check that there is no recursion
         if let ty::TyKind::FnDef(def_id, call_substs) = ty.kind() {
             let def_id = *def_id;
             let full_func_proc_name: &str = &self.encoder.env().tcx().def_path_str(def_id);

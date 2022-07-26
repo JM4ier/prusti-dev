@@ -1649,6 +1649,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     //
                     // FIXME: This is not enough, we also need to handle
                     // mutual-recursion case.
+                    // TODO(jonas)
                     let (function_name, return_type) = self
                         .encoder
                         .encode_pure_function_use_high(called_def_id, self.def_id, call_substs)

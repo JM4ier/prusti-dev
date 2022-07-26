@@ -35,6 +35,7 @@ fn non_reachable_nontermination_is_allowed() {
 }
 
 #[pure]
+#[terminates]
 fn pure_fn() -> u32 {
     42
 }

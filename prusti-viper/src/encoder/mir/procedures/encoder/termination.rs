@@ -93,8 +93,15 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
             }
         }
 
-        let called_fns = self.encoder.get_all_callees(self.def_id);
-        if called_fns.contains(&self.def_id) {
+        // TODO(jonas) recursive calls need to have lower termination measures
+
+        // TODO(jonas) find all functions that are called by this and call is_callgraph_reachable on each one of them
+        let substs = self.encoder.env().identity_substs(self.def_id);
+        if self
+            .encoder
+            .env()
+            .is_callgraph_reachable(self.def_id, self.def_id, substs)
+        {
             Err(SpannedEncodingError::unsupported(
                 "Recursive terminating function",
                 self.mir.span,
