@@ -59,6 +59,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                         ..
                     } => {
                         if let ty::TyKind::FnDef(def_id, _call_substs) = literal.ty().kind() {
+                            // TODO(jonas) disallow calls on trait functions as those act as a black box that could allow undetected (mutual) recursion
                             self.encoder.terminates(*def_id, None)
                         } else {
                             unimplemented!();
@@ -95,13 +96,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
 
         // TODO(jonas) recursive calls need to have lower termination measures
 
-        // TODO(jonas) find all functions that are called by this and call is_callgraph_reachable on each one of them
-        let substs = self.encoder.env().identity_substs(self.def_id);
-        if self
-            .encoder
-            .env()
-            .is_callgraph_reachable(self.def_id, self.def_id, substs)
-        {
+        if self.encoder.env().is_recursive(self.def_id) {
             Err(SpannedEncodingError::unsupported(
                 "Recursive terminating function",
                 self.mir.span,

@@ -638,7 +638,7 @@ impl<'tcx> ErrorManager<'tcx> {
                 PrustiError::verification(
                     "the code might not terminate".to_string(),
                     error_span
-                ).set_failing_assertion(opt_cause_span)
+                )
             }
 
             (full_err_id, ErrorCtxt::Unexpected) => {
