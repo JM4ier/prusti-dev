@@ -251,19 +251,27 @@ fn generate_for_terminates(mut attr: TokenStream, item: &untyped::AnyFnItem) -> 
 }
 
 /// Generate spec items and attributes to typecheck and later retrieve "pure" annotations.
-fn generate_for_pure(attr: TokenStream, item: &untyped::AnyFnItem) -> GeneratedResult {
-    if !attr.is_empty() {
-        return Err(syn::Error::new(
-            attr.span(),
-            "the `#[pure]` attribute does not take parameters",
-        ));
+fn generate_for_pure(mut attr: TokenStream, item: &untyped::AnyFnItem) -> GeneratedResult {
+    if attr.is_empty() {
+        attr = quote! { Int::new(1) };
     }
 
+    let mut rewriter = rewriter::AstRewriter::new();
+    let spec_id = rewriter.generate_spec_id();
+    let spec_id_str = spec_id.to_string();
+    let spec_item =
+        rewriter.process_assertion(rewriter::SpecItemType::Termination, spec_id, attr, item)?;
+
     Ok((
-        vec![],
-        vec![parse_quote_spanned! {item.span()=>
-            #[prusti::pure]
-        }],
+        vec![spec_item],
+        vec![
+            parse_quote_spanned! {item.span()=>
+                #[prusti::terminates_spec_id_ref = #spec_id_str]
+            },
+            parse_quote_spanned! {item.span()=>
+                #[prusti::pure]
+            },
+        ],
     ))
 }
 
