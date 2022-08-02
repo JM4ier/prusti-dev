@@ -559,7 +559,7 @@ impl IntoLow for vir_mid::Statement {
             Self::GhostAssign(statement) => {
                 let mut stmts = Vec::new();
                 let value = statement.value.to_procedure_snapshot(lowerer)?;
-                let update = lowerer.encode_snapshot_update(&mut stmts, &statement.target, value, statement.position)?;
+                lowerer.encode_snapshot_update(&mut stmts, &statement.target, value, statement.position)?;
                 Ok(stmts)
             }
             Self::NewLft(statement) => {

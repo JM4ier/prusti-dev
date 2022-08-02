@@ -1,7 +1,4 @@
-use crate::encoder::{
-    errors::{SpannedEncodingError, SpannedEncodingResult},
-    mir::specifications::SpecificationsInterface,
-};
+use crate::encoder::{errors::SpannedEncodingResult, mir::specifications::SpecificationsInterface};
 use prusti_rustc_interface::{
     data_structures::graph::WithSuccessors,
     middle::{
