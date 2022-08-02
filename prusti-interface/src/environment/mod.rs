@@ -559,12 +559,12 @@ impl<'tcx> Environment<'tcx> {
         if caller_def_id == called_def_id {
             true
         } else {
-            let param_env = self.tcx.param_env(caller_def_id);
+            let param_env = self.tcx.param_env(called_def_id);
             let instance =
-                traits::resolve_instance(self.tcx, param_env.and((called_def_id, call_substs)))
+                traits::resolve_instance(self.tcx, param_env.and((caller_def_id, call_substs)))
                     .unwrap();
             self.tcx
-                .mir_callgraph_reachable((instance.unwrap(), caller_def_id.expect_local()))
+                .mir_callgraph_reachable((instance.unwrap(), called_def_id.expect_local()))
         }
     }
 

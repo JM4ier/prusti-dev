@@ -4,7 +4,7 @@ use self::{
 };
 use super::MirProcedureEncoderInterface;
 use crate::encoder::{
-    errors::{ErrorCtxt, PanicCause, SpannedEncodingResult, WithSpan},
+    errors::{ErrorCtxt, PanicCause, SpannedEncodingError, SpannedEncodingResult, WithSpan},
     mir::{
         casts::CastsEncoderInterface,
         constants::ConstantsEncoderInterface,
@@ -264,8 +264,19 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         call_substs: SubstsRef<'tcx>,
         arguments: &[vir_high::Expression],
     ) -> SpannedEncodingResult<()> {
+        let called_fun = procedure_contract.def_id;
+
+        if !called_fun.is_local()
+            || !self
+                .encoder
+                .env()
+                .is_callgraph_reachable(called_fun, self.def_id, call_substs)
+        {
+            return Ok(());
+        }
+
         let call_expr =
-            self.encode_termination_expression(&procedure_contract, call_substs, &arguments)?;
+            self.encode_termination_expression(&procedure_contract, span, call_substs, &arguments)?;
 
         let term_var = self.termination_variable.clone().unwrap();
         let term_ty = vir_high::Type::Int(vir_high::ty::Int::Unbounded);
@@ -289,6 +300,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
     fn encode_termination_expression(
         &mut self,
         procedure_contract: &ProcedureContractMirDef<'tcx>,
+        span: Span,
         call_substs: SubstsRef<'tcx>,
         arguments: &[vir_high::Expression],
     ) -> SpannedEncodingResult<vir_high::Expression> {
@@ -298,7 +310,13 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
 
         let (expr, expr_substs) = procedure_contract
             .functional_termination_measure(self.encoder.env(), call_substs)
-            .expect("non-terminating function called from terminating function");
+            .ok_or_else(|| {
+                SpannedEncodingError::incorrect(
+                    "Terminating function calls nonterminating function",
+                    span,
+                )
+            })?;
+
         Ok(self.encoder.encode_assertion_high(
             &expr,
             None,
@@ -398,8 +416,12 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         }
 
         if self.encoder.terminates(self.def_id, None) {
-            let termination_expr =
-                self.encode_termination_expression(&procedure_contract, substs, &arguments)?;
+            let termination_expr = self.encode_termination_expression(
+                &procedure_contract,
+                mir_span,
+                substs,
+                &arguments,
+            )?;
             let term_var = self.fresh_ghost_variable(
                 "termination_var",
                 vir_high::Type::Int(vir_high::ty::Int::Unbounded),
