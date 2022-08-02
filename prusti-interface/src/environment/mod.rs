@@ -541,7 +541,7 @@ impl<'tcx> Environment<'tcx> {
             if func.as_local().is_some() {
                 // assumption that functions from a different crate cannot call this function
                 // that would entail a cyclic dependency which doesn't make much sense to me
-                let reachable = self.is_callgraph_reachable(func, proc_def_id, substs_ref);
+                let reachable = self.callee_reaches_caller(proc_def_id, func, substs_ref);
                 if reachable {
                     return true;
                 }
@@ -550,21 +550,25 @@ impl<'tcx> Environment<'tcx> {
         false
     }
 
-    pub fn is_callgraph_reachable(
+    pub fn callee_reaches_caller(
         &self,
         caller_def_id: ProcedureDefId,
         called_def_id: ProcedureDefId,
         call_substs: SubstsRef<'tcx>,
     ) -> bool {
-        if caller_def_id == called_def_id {
+        if called_def_id == caller_def_id {
             true
         } else {
-            let param_env = self.tcx.param_env(called_def_id);
-            let instance =
-                traits::resolve_instance(self.tcx, param_env.and((caller_def_id, call_substs)))
-                    .unwrap();
-            self.tcx
-                .mir_callgraph_reachable((instance.unwrap(), called_def_id.expect_local()))
+            let param_env = self.tcx.param_env(caller_def_id);
+            if let Some(instance) =
+                traits::resolve_instance(self.tcx, param_env.and((called_def_id, call_substs)))
+                    .unwrap()
+            {
+                self.tcx
+                    .mir_callgraph_reachable((instance, caller_def_id.expect_local()))
+            } else {
+                true
+            }
         }
     }
 

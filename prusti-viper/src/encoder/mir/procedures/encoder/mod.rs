@@ -266,11 +266,10 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
     ) -> SpannedEncodingResult<()> {
         let called_fun = procedure_contract.def_id;
 
-        if !called_fun.is_local()
-            || !self
-                .encoder
-                .env()
-                .is_callgraph_reachable(called_fun, self.def_id, call_substs)
+        if !self
+            .encoder
+            .env()
+            .callee_reaches_caller(self.def_id, called_fun, call_substs)
         {
             return Ok(());
         }
@@ -1748,7 +1747,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     post_call_block_builder.add_statement(assume_statement);
                 }
                 if self.encoder.is_pure(called_def_id, Some(call_substs))
-                    && !self.encoder.env().is_callgraph_reachable(
+                    && !self.encoder.env().callee_reaches_caller(
                         self.def_id,
                         called_def_id,
                         call_substs,

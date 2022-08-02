@@ -39,5 +39,5 @@ fn nonterminating() {
 
 #[pure]
 fn pure_implies_termination() {
-    pure_implies_termination(); //~ ERROR
+    pure_implies_termination() //~ ERROR
 }

@@ -23,7 +23,9 @@ fn ghost_terminates() {
 
 fn ghost_nontermination_error() {
     ghost! {
-        loop {} //~ ERROR: the code might not terminate
+        loop {
+            //~ ERROR: the code might not terminate
+        }
     };
 }
 
