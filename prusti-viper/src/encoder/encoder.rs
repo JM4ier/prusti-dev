@@ -11,7 +11,6 @@ use super::{
     },
     middle::core_proof::{MidCoreProofEncoderInterface, MidCoreProofEncoderState},
     mir::{
-        call_dependency::CallDependencyInterface,
         contracts::ContractsEncoderState,
         procedures::MirProcedureEncoderState,
         pure::{PureFunctionEncoderInterface, PureFunctionEncoderState},

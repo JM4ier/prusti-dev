@@ -186,6 +186,7 @@ impl<'v, 'tcx: 'v> SpecificationsInterface<'tcx> for super::super::super::Encode
         result
     }
 
+    // TODO(jonas) return termination measure
     fn terminates(&self, def_id: DefId, substs: Option<SubstsRef<'tcx>>) -> bool {
         let substs = substs.unwrap_or_else(|| self.env().identity_substs(def_id));
         let query = SpecQuery::GetProcKind(def_id, substs);
@@ -199,7 +200,8 @@ impl<'v, 'tcx: 'v> SpecificationsInterface<'tcx> for super::super::super::Encode
                     .extract_with_selective_replacement()
                     .copied()
             })
-            .unwrap_or(false);
+            .unwrap_or(None)
+            .is_some();
         trace!("terminates {:?} = {}", query, result);
         result
     }

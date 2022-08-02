@@ -36,7 +36,6 @@ struct ProcedureSpecRefs {
     pure: bool,
     abstract_predicate: bool,
     trusted: bool,
-    terminates: bool,
 }
 
 #[derive(Debug, Default)]
@@ -139,11 +138,13 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
                             *self.spec_functions.get(spec_id).unwrap(),
                         ));
                     }
+                    SpecIdRef::Terminates(spec_id) => {
+                        spec.set_terminates(*self.spec_functions.get(spec_id).unwrap());
+                    }
                 }
             }
 
             spec.set_trusted(refs.trusted);
-            spec.set_terminates(refs.terminates);
 
             // We do not want to create an empty kind.
             // This would lead to refinement inheritance if there is a trait involved.
@@ -287,6 +288,11 @@ fn get_procedure_spec_ids(def_id: DefId, attrs: &[ast::Attribute]) -> Option<Pro
             .map(|raw_spec_id| SpecIdRef::Postcondition(parse_spec_id(raw_spec_id, def_id))),
     );
     spec_id_refs.extend(
+        read_prusti_attrs("terminates_spec_id_ref", attrs)
+            .into_iter()
+            .map(|raw_spec_id| SpecIdRef::Terminates(parse_spec_id(raw_spec_id, def_id))),
+    );
+    spec_id_refs.extend(
         // TODO: pledges with LHS that is not "result" would need to carry the
         // LHS expression through typing
         read_prusti_attrs("pledge_spec_id_ref", attrs)
@@ -319,15 +325,13 @@ fn get_procedure_spec_ids(def_id: DefId, attrs: &[ast::Attribute]) -> Option<Pro
     );
 
     let pure = has_prusti_attr(attrs, "pure");
-    let terminates = has_prusti_attr(attrs, "terminates") || pure;
     let trusted = has_prusti_attr(attrs, "trusted");
     let abstract_predicate = has_abstract_predicate_attr(attrs);
 
-    if abstract_predicate || pure || trusted || terminates || !spec_id_refs.is_empty() {
+    if abstract_predicate || pure || trusted || !spec_id_refs.is_empty() {
         Some(ProcedureSpecRefs {
             spec_id_refs,
             pure,
-            terminates,
             abstract_predicate,
             trusted,
         })

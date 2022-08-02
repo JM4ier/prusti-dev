@@ -1,4 +1,3 @@
-use super::super::super::call_dependency::CallDependencyInterface;
 use crate::encoder::{
     errors::{SpannedEncodingError, SpannedEncodingResult},
     mir::specifications::SpecificationsInterface,
@@ -96,11 +95,13 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
 
         // TODO(jonas) recursive calls need to have lower termination measures
 
-        if self.encoder.env().is_recursive(self.def_id) {
-            Err(SpannedEncodingError::unsupported(
-                "Recursive terminating function",
-                self.mir.span,
-            ))?;
+        if self.encoder.terminates(self.def_id, None)
+            && self.encoder.env().is_recursive(self.def_id)
+        {
+            //Err(SpannedEncodingError::unsupported(
+            //    "Recursive terminating function",
+            //    self.mir.span,
+            //))?;
         }
 
         Ok(needs_unreachability)

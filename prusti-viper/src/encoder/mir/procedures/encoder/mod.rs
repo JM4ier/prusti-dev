@@ -112,6 +112,7 @@ pub(super) fn encode_procedure<'v, 'tcx: 'v>(
         points_to_reborrow,
         reborrow_lifetimes_to_remove_for_block,
         current_basic_block,
+        termination_variable: None,
     };
     procedure_encoder.encode()
 }
@@ -147,6 +148,7 @@ struct ProcedureEncoder<'p, 'v: 'p, 'tcx: 'v> {
     points_to_reborrow: BTreeSet<vir_high::Local>,
     reborrow_lifetimes_to_remove_for_block: BTreeMap<mir::BasicBlock, BTreeSet<String>>,
     current_basic_block: Option<mir::BasicBlock>,
+    termination_variable: Option<vir_high::VariableDecl>,
 }
 
 impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
@@ -254,6 +256,59 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         ))
     }
 
+    fn encode_termination_measure_call_assertion(
+        &mut self,
+        block_builder: &mut BasicBlockBuilder,
+        span: Span,
+        procedure_contract: &ProcedureContractMirDef<'tcx>,
+        call_substs: SubstsRef<'tcx>,
+        arguments: &[vir_high::Expression],
+    ) -> SpannedEncodingResult<()> {
+        let call_expr =
+            self.encode_termination_expression(&procedure_contract, call_substs, &arguments)?;
+
+        let term_var = self.termination_variable.clone().unwrap();
+        let term_ty = vir_high::Type::Int(vir_high::ty::Int::Unbounded);
+        let zero = vir_high::Expression::constant_no_pos(0.into(), term_ty);
+        let cond = vir_high::Expression::and(
+            vir_high::Expression::greater_than(term_var.clone().into(), zero),
+            vir_high::Expression::greater_than(term_var.clone().into(), call_expr),
+        );
+
+        let assert_statement = self.encoder.set_statement_error_ctxt(
+            vir_high::Statement::assert_no_pos(cond),
+            span,
+            ErrorCtxt::CallTermination,
+            self.def_id,
+        )?;
+        block_builder.add_statement(assert_statement);
+
+        Ok(())
+    }
+
+    fn encode_termination_expression(
+        &mut self,
+        procedure_contract: &ProcedureContractMirDef<'tcx>,
+        call_substs: SubstsRef<'tcx>,
+        arguments: &[vir_high::Expression],
+    ) -> SpannedEncodingResult<vir_high::Expression> {
+        assert!(self.encoder.terminates(self.def_id, None));
+
+        // TODO(jonas) only if this might recurse
+
+        let (expr, expr_substs) = procedure_contract
+            .functional_termination_measure(self.encoder.env(), call_substs)
+            .expect("non-terminating function called from terminating function");
+        Ok(self.encoder.encode_assertion_high(
+            &expr,
+            None,
+            arguments,
+            None,
+            self.def_id,
+            expr_substs,
+        )?)
+    }
+
     fn encode_precondition_expressions(
         &mut self,
         procedure_contract: &ProcedureContractMirDef<'tcx>,
@@ -341,6 +396,27 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             )?;
             preconditions.push(assume_statement);
         }
+
+        if self.encoder.terminates(self.def_id, None) {
+            let termination_expr =
+                self.encode_termination_expression(&procedure_contract, substs, &arguments)?;
+            let term_var = self.fresh_ghost_variable(
+                "termination_var",
+                vir_high::Type::Int(vir_high::ty::Int::Unbounded),
+            );
+            self.termination_variable = Some(term_var.clone());
+            let assign_stmt =
+                vir_high::Statement::ghost_assign_no_pos(term_var.into(), termination_expr);
+            let assign_stmt = self.encoder.set_statement_error_ctxt(
+                assign_stmt,
+                mir_span,
+                ErrorCtxt::UnexpectedAssignMethodTerminationMeasure,
+                self.def_id,
+            )?;
+            // TODO(jonas) don't push this to preconditions maybe
+            preconditions.push(assign_stmt);
+        }
+
         let old_label = self.encoder.set_statement_error_ctxt(
             vir_high::Statement::old_label_no_pos(PRECONDITION_LABEL.to_string()),
             mir_span,
@@ -1550,6 +1626,16 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             .get_mir_procedure_contract_for_call(self.def_id, called_def_id, call_substs)
             .with_span(span)?;
 
+        if self.encoder.terminates(self.def_id, None) {
+            self.encode_termination_measure_call_assertion(
+                block_builder,
+                span,
+                &procedure_contract,
+                call_substs,
+                &arguments,
+            )?;
+        }
+
         for expression in
             self.encode_precondition_expressions(&procedure_contract, call_substs, &arguments)?
         {
@@ -1642,7 +1728,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     post_call_block_builder.add_statement(assume_statement);
                 }
                 if self.encoder.is_pure(called_def_id, Some(call_substs))
-                    && !self.encoder.env().is_callgraph_reachable(self.def_id, called_def_id, call_substs)
+                    && !self.encoder.env().is_callgraph_reachable(
+                        self.def_id,
+                        called_def_id,
+                        call_substs,
+                    )
                 {
                     // If we are verifying a pure function, we always need
                     // to encode it as a method
