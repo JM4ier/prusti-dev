@@ -306,8 +306,6 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
     ) -> SpannedEncodingResult<vir_high::Expression> {
         assert!(self.encoder.terminates(self.def_id, None));
 
-        // TODO(jonas) only if this might recurse
-
         let (expr, expr_substs) = procedure_contract
             .functional_termination_measure(self.encoder.env(), call_substs)
             .ok_or_else(|| {

@@ -657,6 +657,13 @@ impl<'tcx> ErrorManager<'tcx> {
                 )
             }
 
+            ("assert.failed:assertion.false", ErrorCtxt::CallTermination) => {
+                PrustiError::verification(
+                    "the termination measure of this call is not necessarily lower".to_string(),
+                    error_span
+                )
+            }
+
             (full_err_id, ErrorCtxt::Unexpected) => {
                 PrustiError::internal(
                     format!(

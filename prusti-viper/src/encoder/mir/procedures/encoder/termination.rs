@@ -57,9 +57,9 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                         func: mir::Operand::Constant(box mir::Constant { literal, .. }),
                         ..
                     } => {
-                        if let ty::TyKind::FnDef(def_id, _call_substs) = literal.ty().kind() {
+                        if let ty::TyKind::FnDef(def_id, call_substs) = literal.ty().kind() {
                             // TODO(jonas) disallow calls on trait functions as those act as a black box that could allow undetected (mutual) recursion
-                            self.encoder.terminates(*def_id, None)
+                            self.encoder.terminates(*def_id, Some(call_substs))
                         } else {
                             unimplemented!();
                         }
@@ -91,17 +91,6 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 // the only valid possibility is if the block is never entered.
                 needs_unreachability.insert(bb);
             }
-        }
-
-        // TODO(jonas) recursive calls need to have lower termination measures
-
-        if self.encoder.terminates(self.def_id, None)
-            && self.encoder.env().is_recursive(self.def_id)
-        {
-            //Err(SpannedEncodingError::unsupported(
-            //    "Recursive terminating function",
-            //    self.mir.span,
-            //))?;
         }
 
         Ok(needs_unreachability)
