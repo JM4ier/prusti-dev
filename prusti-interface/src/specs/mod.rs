@@ -202,14 +202,12 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
                 local_id.to_def_id(),
                 typed::LoopSpecification {
                     invariant: *local_id,
+                    variant: todo!(),
                 },
             );
         }
         for local_id in self.loop_variants.iter() {
-            def_spec.loop_variants.insert(
-                local_id.to_def_id(),
-                typed::LoopVariant { variant: *local_id },
-            );
+            todo!("insert these loop variants up there somewhere");
         }
     }
 

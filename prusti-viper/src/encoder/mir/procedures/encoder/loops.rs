@@ -122,10 +122,12 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                     ),
                 )) = statement.kind
                 {
-                    let specification = self.encoder.get_loop_variants(cl_def_id).unwrap();
-                    let span = self
-                        .encoder
-                        .get_definition_span(specification.variant.to_def_id());
+                    let specification = self.encoder.get_loop_specs(cl_def_id).unwrap();
+                    let variant = match specification.variant {
+                        Some(v) => v,
+                        None => continue,
+                    };
+                    let span = self.encoder.get_definition_span(variant.to_def_id());
                     let encoded_specification = self.encoder.set_expression_error_ctxt(
                         self.encoder.encode_variant_high(
                             self.mir,

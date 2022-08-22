@@ -1925,21 +1925,6 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 .insert(invariant_location, statement);
         }
 
-        // Encode loop variants.
-        let mut loop_variant_blocks = self.specification_blocks.loop_variant_blocks().clone();
-        for loop_head in &self.procedure.loop_info().loop_heads {
-            let (variant_location, specification_blocks) =
-                if let Some(blocks) = loop_variant_blocks.remove(loop_head) {
-                    (blocks.location, blocks.specification_blocks)
-                } else {
-                    continue;
-                };
-            let statement =
-                self.encode_loop_variant(*loop_head, variant_location, specification_blocks)?;
-            self.loop_invariant_encoding
-                .insert(variant_location, statement);
-        }
-
         self.encode_ghost_blocks()?;
 
         Ok(())

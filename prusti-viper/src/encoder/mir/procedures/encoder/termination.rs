@@ -44,8 +44,10 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 same_loop
                     && self
                         .specification_blocks
-                        .loop_variant_blocks()
-                        .contains_key(&bb1)
+                        .loop_invariant_blocks()
+                        .get(&bb1)
+                        .and_then(|block| todo!("find out if this loop invariant block has a loop variant"))
+                        .unwrap_or(false)
             });
 
             if all_pred_term || (non_dom_term && has_loop_variant) {
