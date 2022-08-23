@@ -6,6 +6,7 @@ use crate::encoder::{
         specifications::SpecificationsInterface, type_layouts::MirTypeLayoutsEncoderInterface,
     },
 };
+use prusti_interface::specs::typed::LoopSpecification;
 use prusti_rustc_interface::middle::mir;
 use vir_crate::high::{self as vir_high};
 
@@ -33,9 +34,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 )) = statement.kind
                 {
                     let specification = self.encoder.get_loop_specs(cl_def_id).unwrap();
-                    let span = self
-                        .encoder
-                        .get_definition_span(specification.invariant.to_def_id());
+                    let invariant = match specification {
+                        LoopSpecification::Invariant(inv) => inv,
+                        _ => continue,
+                    };
+                    let span = self.encoder.get_definition_span(invariant.to_def_id());
                     let encoded_specification = self.encoder.set_expression_error_ctxt(
                         self.encoder.encode_invariant_high(
                             self.mir,
@@ -123,9 +126,9 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 )) = statement.kind
                 {
                     let specification = self.encoder.get_loop_specs(cl_def_id).unwrap();
-                    let variant = match specification.variant {
-                        Some(v) => v,
-                        None => continue,
+                    let variant = match specification {
+                        LoopSpecification::Variant(v) => v,
+                        _ => continue,
                     };
                     let span = self.encoder.get_definition_span(variant.to_def_id());
                     let encoded_specification = self.encoder.set_expression_error_ctxt(

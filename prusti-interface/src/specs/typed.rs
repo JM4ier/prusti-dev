@@ -110,9 +110,9 @@ impl Display for ProcedureSpecificationKind {
 }
 
 #[derive(Debug, Clone)]
-pub struct LoopSpecification {
-    pub invariant: LocalDefId,
-    pub variant: Option<LocalDefId>,
+pub enum LoopSpecification {
+    Invariant(LocalDefId),
+    Variant(LocalDefId),
 }
 
 /// Specification of a type.
