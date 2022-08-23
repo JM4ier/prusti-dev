@@ -2,7 +2,7 @@
 
 use super::encoder::{FunctionCallInfo, FunctionCallInfoHigh, PureFunctionEncoder};
 use crate::encoder::{
-    errors::{SpannedEncodingError, SpannedEncodingResult, WithSpan},
+    errors::{SpannedEncodingResult, WithSpan},
     mir::{generics::MirGenericsEncoderInterface, specifications::SpecificationsInterface},
     snapshot::interface::SnapshotEncoderInterface,
     stub_function_encoder::StubFunctionEncoder,
@@ -246,12 +246,6 @@ impl<'v, 'tcx: 'v> PureFunctionEncoderInterface<'v, 'tcx>
 
         let mir_span = self.env().tcx().def_span(proc_def_id);
 
-        if !self.terminates(proc_def_id, Some(substs)) {
-            let mut err =
-                SpannedEncodingError::incorrect("Pure functions need to terminate", mir_span);
-            err.set_help("Consider adding the `#[terminates]` attribute.");
-            Err(err)?;
-        }
         let substs_key = self
             .encode_generic_arguments_high(proc_def_id, substs)
             .with_span(mir_span)?;

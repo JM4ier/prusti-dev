@@ -34,7 +34,7 @@ use crate::encoder::{
     snapshot::interface::{SnapshotEncoderInterface, SnapshotEncoderState},
     spec_function_encoder::SpecFunctionEncoder,
     stub_procedure_encoder::StubProcedureEncoder,
-    SpecFunctionKind,
+    SpecFunctionKind, mir::errors::ErrorInterface,
 };
 use ::log::{debug, info, trace};
 use prusti_common::{

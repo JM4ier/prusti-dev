@@ -153,6 +153,7 @@ struct ProcedureEncoder<'p, 'v: 'p, 'tcx: 'v> {
 
 impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
     fn encode(&mut self) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
+        self.pure_sanity_checks()?;
         let name = self.encoder.encode_item_name(self.def_id);
         let (allocate_parameters, deallocate_parameters) = self.encode_parameters()?;
         let (allocate_returns, deallocate_returns) = self.encode_returns()?;
@@ -174,6 +175,19 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         self.encode_body(&mut procedure_builder)?;
         self.encode_implicit_allocations(&mut procedure_builder)?;
         Ok(procedure_builder.build())
+    }
+
+    fn pure_sanity_checks(&self) -> SpannedEncodingResult<()> {
+        if self.encoder.is_pure(self.def_id, None) && !self.encoder.terminates(self.def_id, None) {
+            let mut err = SpannedEncodingError::incorrect(
+                "Pure functions need to terminate",
+                self.encoder.get_mir_body_span(self.mir),
+            );
+            err.set_help("Consider adding the `#[terminates]` attribute.");
+            Err(err)
+        } else {
+            Ok(())
+        }
     }
 
     fn encode_local(
