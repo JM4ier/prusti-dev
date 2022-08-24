@@ -46,7 +46,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                         .specification_blocks
                         .loop_invariant_blocks()
                         .get(&bb1)
-                        .and_then(|block| todo!("find out if this loop invariant block has a loop variant"))
+                        .and_then(|block| Some(block.is_variant))
                         .unwrap_or(false)
             });
 

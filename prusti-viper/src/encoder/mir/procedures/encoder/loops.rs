@@ -8,21 +8,24 @@ use crate::encoder::{
 };
 use prusti_interface::specs::typed::LoopSpecification;
 use prusti_rustc_interface::middle::mir;
-use vir_crate::high::{self as vir_high};
+use vir_crate::high::{self as vir_high, BasicBlockId, Position};
 
 impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
-    pub(super) fn encode_loop_invariant(
+    /// Encode loop invariant and loop variants
+    pub(super) fn encode_loop_specs(
         &mut self,
         loop_head: mir::BasicBlock,
         invariant_block: mir::BasicBlock,
         specification_blocks: Vec<mir::BasicBlock>,
     ) -> SpannedEncodingResult<vir_high::Statement> {
-        let invariant_location = mir::Location {
+        let location = mir::Location {
             block: invariant_block,
             statement_index: self.mir[invariant_block].statements.len(),
         };
         // Encode functional specification.
-        let mut encoded_specs = Vec::new();
+        let mut encoded_invariant_specs = Vec::new();
+        let mut encoded_variant_specs = Vec::new();
+
         for block in specification_blocks {
             for statement in &self.mir[block].statements {
                 if let mir::StatementKind::Assign(box (
@@ -34,27 +37,31 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 )) = statement.kind
                 {
                     let specification = self.encoder.get_loop_specs(cl_def_id).unwrap();
-                    let invariant = match specification {
-                        LoopSpecification::Invariant(inv) => inv,
-                        _ => continue,
+                    let (spec, encoding_vec, err_ctxt) = match specification {
+                        LoopSpecification::Invariant(inv) => {
+                            (inv, &mut encoded_invariant_specs, ErrorCtxt::LoopInvariant)
+                        }
+                        LoopSpecification::Variant(var) => {
+                            (var, &mut encoded_variant_specs, ErrorCtxt::LoopVariant)
+                        }
                     };
-                    let span = self.encoder.get_definition_span(invariant.to_def_id());
+                    let span = self.encoder.get_definition_span(spec.to_def_id());
                     let encoded_specification = self.encoder.set_expression_error_ctxt(
-                        self.encoder.encode_invariant_high(
+                        self.encoder.encode_loop_spec_high(
                             self.mir,
                             block,
                             self.def_id,
                             cl_substs,
                         )?,
                         span,
-                        ErrorCtxt::LoopInvariant,
+                        err_ctxt,
                         self.def_id,
                     );
-                    encoded_specs.push(encoded_specification);
+                    encoding_vec.push(encoded_specification);
                 }
             }
         }
-        let encoded_back_edges = {
+        let encoded_back_edges: Vec<BasicBlockId> = {
             let predecessors = self.mir.predecessors();
             let dominators = self.mir.dominators();
             predecessors[loop_head]
@@ -63,11 +70,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 .map(|back_edge| self.encode_basic_block_label(*back_edge))
                 .collect()
         };
-        self.init_data.seek_before(invariant_location);
+        self.init_data.seek_before(location);
 
         // Encode permissions.
-        let initialized_places = self.initialization.get_after_statement(invariant_location);
-        let allocated_locals = self.allocation.get_after_statement(invariant_location);
+        let initialized_places = self.initialization.get_after_statement(location);
+        let allocated_locals = self.allocation.get_after_statement(location);
         let (written_places, mutably_borrowed_places, _) = self
             .procedure
             .loop_info()
@@ -89,97 +96,29 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
             }
         }
 
-        // Construct the info.
+        // Construct the variant info.
+        let loop_variant = encoded_variant_specs.into_iter().next().map(|spec| {
+            let var = self.fresh_ghost_variable(
+                "loop_variant",
+                vir_high::Type::Int(vir_high::ty::Int::Unbounded),
+            );
+            vir_high::ast::statement::LoopVariant {
+                var,
+                expr: spec,
+            }
+        });
+
+        // Construct the invariant info.
         let loop_invariant = vir_high::Statement::loop_invariant_no_pos(
             self.encode_basic_block_label(loop_head),
             encoded_back_edges,
             maybe_modified_places,
-            encoded_specs,
+            encoded_invariant_specs,
+            loop_variant,
         );
-        let statement = self.set_statement_error(
-            invariant_location,
-            ErrorCtxt::UnexpectedStorageLive,
-            loop_invariant,
-        )?;
-        Ok(statement)
-    }
-    pub(super) fn encode_loop_variant(
-        &mut self,
-        loop_head: mir::BasicBlock,
-        variant_block: mir::BasicBlock,
-        specification_blocks: Vec<mir::BasicBlock>,
-    ) -> SpannedEncodingResult<vir_high::Statement> {
-        let location = mir::Location {
-            block: variant_block,
-            statement_index: self.mir[variant_block].statements.len(),
-        };
-        // Encode functional specification.
-        let mut encoded_specs = Vec::new();
-        for block in specification_blocks {
-            for statement in &self.mir[block].statements {
-                if let mir::StatementKind::Assign(box (
-                    _,
-                    mir::Rvalue::Aggregate(
-                        box mir::AggregateKind::Closure(cl_def_id, cl_substs),
-                        _,
-                    ),
-                )) = statement.kind
-                {
-                    let specification = self.encoder.get_loop_specs(cl_def_id).unwrap();
-                    let variant = match specification {
-                        LoopSpecification::Variant(v) => v,
-                        _ => continue,
-                    };
-                    let span = self.encoder.get_definition_span(variant.to_def_id());
-                    let encoded_specification = self.encoder.set_expression_error_ctxt(
-                        self.encoder.encode_variant_high(
-                            self.mir,
-                            block,
-                            self.def_id,
-                            cl_substs,
-                        )?,
-                        span,
-                        ErrorCtxt::LoopVariant,
-                        self.def_id,
-                    );
-                    encoded_specs.push(encoded_specification);
-                }
-            }
-        }
-        let encoded_back_edges = {
-            let predecessors = self.mir.predecessors();
-            let dominators = self.mir.dominators();
-            predecessors[loop_head]
-                .iter()
-                .filter(|predecessor| dominators.is_dominated_by(**predecessor, loop_head))
-                .map(|back_edge| self.encode_basic_block_label(*back_edge))
-                .collect()
-        };
-        self.init_data.seek_before(location);
+        let invariant_statement =
+            self.set_statement_error(location, ErrorCtxt::UnexpectedStorageLive, loop_invariant)?;
 
-        assert_eq!(encoded_specs.len(), 1);
-        let spec = encoded_specs.into_iter().next().unwrap();
-
-        let var = self.fresh_ghost_variable(
-            "loop_variant",
-            vir_high::Type::Int(vir_high::ty::Int::Unbounded),
-        );
-        let modified_place = vir_high::Predicate::memory_block_stack_no_pos(
-            vir_high::Expression::local_no_pos(var.clone()),
-            self.encoder
-                .encode_type_size_expression_vir(var.ty.clone())?,
-        );
-
-        // Construct the info.
-        let loop_variant = vir_high::Statement::loop_variant_no_pos(
-            self.encode_basic_block_label(loop_head),
-            encoded_back_edges,
-            spec,
-            var,
-            modified_place,
-        );
-        let statement =
-            self.set_statement_error(location, ErrorCtxt::UnexpectedStorageLive, loop_variant)?;
-        Ok(statement)
+        Ok(invariant_statement)
     }
 }

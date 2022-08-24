@@ -21,7 +21,7 @@ pub use self::{
         statement::{
             Assert, Assign, Assume, BorShorten, CloseFracRef, CloseMutRef, Comment, Consume,
             CopyPlace, DeadInclusion, DeadLifetime, EndLft, Exhale, GhostAssign, Havoc, Inhale,
-            LeakAll, LifetimeReturn, LifetimeTake, LoopInvariant, LoopVariant, MovePlace, NewLft,
+            LeakAll, LifetimeReturn, LifetimeTake, LoopInvariant, MovePlace, NewLft,
             ObtainMutRef, OldLabel, OpenFracRef, OpenMutRef, SetUnionVariant, Statement,
             WriteAddress, WritePlace,
         },

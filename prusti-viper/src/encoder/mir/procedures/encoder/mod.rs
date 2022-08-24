@@ -166,6 +166,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         let mut pre_statements = assume_lifetime_preconditions;
         pre_statements.extend(allocate_parameters);
         pre_statements.extend(assume_preconditions);
+        // TODO(jonas) append termination var intialization here
         pre_statements.extend(allocate_returns);
         let mut post_statements = assert_postconditions;
         post_statements.extend(deallocate_parameters);
@@ -1934,7 +1935,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     (*loop_head, Vec::new())
                 };
             let statement =
-                self.encode_loop_invariant(*loop_head, invariant_location, specification_blocks)?;
+                self.encode_loop_specs(*loop_head, invariant_location, specification_blocks)?;
             self.loop_invariant_encoding
                 .insert(invariant_location, statement);
         }
@@ -1988,7 +1989,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
 
                 let assert_expr = self.encoder.set_expression_error_ctxt(
                     self.encoder
-                        .encode_invariant_high(self.mir, bb, self.def_id, cl_substs)?,
+                        .encode_loop_spec_high(self.mir, bb, self.def_id, cl_substs)?,
                     span,
                     error_ctxt.clone(),
                     self.def_id,
@@ -2036,7 +2037,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
 
                 let expr = self.encoder.set_expression_error_ctxt(
                     self.encoder
-                        .encode_invariant_high(self.mir, bb, self.def_id, cl_substs)?,
+                        .encode_loop_spec_high(self.mir, bb, self.def_id, cl_substs)?,
                     span,
                     error_ctxt.clone(),
                     self.def_id,

@@ -12,7 +12,6 @@ impl Positioned for Statement {
             Self::Assume(statement) => statement.position(),
             Self::Assert(statement) => statement.position(),
             Self::LoopInvariant(statement) => statement.position(),
-            Self::LoopVariant(statement) => statement.position(),
             Self::MovePlace(statement) => statement.position(),
             Self::CopyPlace(statement) => statement.position(),
             Self::WritePlace(statement) => statement.position(),
@@ -81,12 +80,6 @@ impl Positioned for Assert {
 }
 
 impl Positioned for LoopInvariant {
-    fn position(&self) -> Position {
-        self.position
-    }
-}
-
-impl Positioned for LoopVariant {
     fn position(&self) -> Position {
         self.position
     }

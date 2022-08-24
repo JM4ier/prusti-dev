@@ -59,8 +59,7 @@ pub(in super::super) fn propagate_assertions_back<'v, 'tcx: 'v>(
                         | vir_high::Statement::CloseFracRef(_)
                         | vir_high::Statement::BorShorten(_) => true,
                         vir_high::Statement::Assume(_) | vir_high::Statement::Inhale(_) => false,
-                        vir_high::Statement::LoopInvariant(_)
-                        | vir_high::Statement::LoopVariant(_) => unreachable!(),
+                        vir_high::Statement::LoopInvariant(_) => unreachable!(),
                     };
                 }
                 if statement_index == 0 {

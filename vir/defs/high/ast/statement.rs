@@ -24,7 +24,6 @@ pub enum Statement {
     Assume(Assume),
     Assert(Assert),
     LoopInvariant(LoopInvariant),
-    LoopVariant(LoopVariant),
     MovePlace(MovePlace),
     CopyPlace(CopyPlace),
     WritePlace(WritePlace),
@@ -106,7 +105,7 @@ pub struct Assert {
     "display::foreach!(\"    {}\n\", maybe_modified_places)",
     "display::foreach!(\"    {}\n\", functional_specifications)"
 )]
-/// The loop invariant.
+/// The loop invariant, with an optionally attached loop variant.
 pub struct LoopInvariant {
     pub loop_head: BasicBlockId,
     /// A block dominated by the loop head that has the loop head as a
@@ -123,22 +122,14 @@ pub struct LoopInvariant {
     /// memory.
     pub maybe_modified_places: Vec<Predicate>,
     pub functional_specifications: Vec<Expression>,
+    pub variant: Option<LoopVariant>,
     pub position: Position,
 }
 
-#[display(fmt = "loop-variant (\n{})", spec)]
-/// The loop variant.
+#[display(fmt = "{}: {}", var, expr)]
 pub struct LoopVariant {
-    pub loop_head: BasicBlockId,
-    /// A block dominated by the loop head that has the loop head as a
-    /// successor.
-    pub back_edges: Vec<BasicBlockId>,
-    pub spec: Expression,
-    pub position: Position,
-    /// The variable that stores the termination measure
     pub var: VariableDecl,
-    /// The place of the loop variant, which is modified
-    pub modified_place: Predicate,
+    pub expr: Expression,
 }
 
 #[display(fmt = "move {} ← {}", target, source)]

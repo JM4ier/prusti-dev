@@ -29,6 +29,7 @@ pub(super) struct LoopInvariantBlocks {
     pub(super) location: mir::BasicBlock,
     /// The blocks containing specification closures.
     pub(super) specification_blocks: Vec<mir::BasicBlock>,
+    pub(super) is_variant: bool,
 }
 
 impl SpecificationBlocks {
@@ -94,6 +95,7 @@ impl SpecificationBlocks {
                     LoopInvariantBlocks {
                         location: predecessors[bb][0],
                         specification_blocks: Vec::new(),
+                        is_variant: is_loop_variant_block(data, tcx),
                     }
                 });
                 loop_blocks.specification_blocks.push(bb);

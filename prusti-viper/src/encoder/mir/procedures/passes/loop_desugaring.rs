@@ -9,22 +9,26 @@ use vir_crate::{
     high::{
         self as vir_high,
         ast::{expression::visitors::ExpressionFolder, statement::visitors::StatementFolder},
+        Statement,
     },
 };
 
-pub(in super::super) fn desugar_loops<'v, 'tcx: 'v>(
+/// Desugars loop invariants and loop variants to simple statements
+pub fn desugar_loops<'v, 'tcx: 'v>(
     encoder: &mut Encoder<'v, 'tcx>,
     mut procedure: vir_high::ProcedureDecl,
 ) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
-    procedure = desugar_loop_invariants(encoder, procedure)?;
-    procedure = desugar_loop_variants(encoder, procedure)?;
-    Ok(procedure)
-}
+    let mut predecessors = BTreeMap::new();
+    for (bb, succ) in procedure.predecessors().into_iter() {
+        predecessors.insert(
+            bb.clone(),
+            succ.into_iter()
+                .cloned()
+                .collect::<Vec<vir_high::BasicBlockId>>(),
+        );
+    }
+    let predecessors = predecessors;
 
-fn desugar_loop_invariants<'v, 'tcx: 'v>(
-    encoder: &mut Encoder<'v, 'tcx>,
-    mut procedure: vir_high::ProcedureDecl,
-) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
     let mut is_first = true;
     while let Some((invariant_block_id, loop_invariant)) = find_loop_invariant(&procedure) {
         let loop_head = loop_invariant.loop_head.clone();
@@ -54,11 +58,17 @@ fn desugar_loop_invariants<'v, 'tcx: 'v>(
             });
         }
 
+        let mut invariant_stmts = Vec::new();
+
         let invariant_block = procedure.basic_blocks.get_mut(&invariant_block_id).unwrap();
+        let invariant_idx = invariant_block
+            .statements
+            .iter()
+            .position(|s| matches!(s, Statement::LoopInvariant(..)))
+            .unwrap();
         let loop_invariant = invariant_block
             .statements
-            .pop()
-            .unwrap()
+            .remove(invariant_idx)
             .unwrap_loop_invariant();
 
         for assertion in &loop_invariant.functional_specifications {
@@ -67,7 +77,7 @@ fn desugar_loop_invariants<'v, 'tcx: 'v>(
                 loop_invariant.position,
                 ErrorCtxt::AssertLoopInvariantOnEntry,
             )?;
-            invariant_block.statements.push(statement);
+            invariant_stmts.push(statement);
         }
 
         // Note: It is important for soundness that we havoc here everything
@@ -79,7 +89,7 @@ fn desugar_loop_invariants<'v, 'tcx: 'v>(
                 loop_invariant.position,
                 ErrorCtxt::UnexpectedAssumeLoopInvariantOnEntry,
             )?;
-            invariant_block.statements.push(statement);
+            invariant_stmts.push(statement);
         }
 
         for assertion in loop_invariant.functional_specifications {
@@ -88,100 +98,186 @@ fn desugar_loop_invariants<'v, 'tcx: 'v>(
                 loop_invariant.position,
                 ErrorCtxt::UnexpectedAssumeLoopInvariantOnEntry,
             )?;
-            invariant_block.statements.push(statement);
-        }
-    }
-    Ok(procedure)
-}
-
-fn desugar_loop_variants<'v, 'tcx: 'v>(
-    encoder: &mut Encoder<'v, 'tcx>,
-    mut procedure: vir_high::ProcedureDecl,
-) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
-    let mut predecessors = BTreeMap::new();
-    for (bb, succ) in procedure.predecessors().into_iter() {
-        predecessors.insert(
-            bb.clone(),
-            succ.into_iter()
-                .cloned()
-                .collect::<Vec<vir_high::BasicBlockId>>(),
-        );
-    }
-    let predecessors = predecessors;
-
-    while let Some((bb, variant)) = find_loop_variant(&procedure) {
-        let loop_head = variant.loop_head.clone();
-        let back_edges = variant.back_edges.clone();
-
-        let variant_block = procedure.basic_blocks.get_mut(&bb).unwrap();
-        let variant = variant_block
-            .statements
-            .pop()
-            .unwrap()
-            .unwrap_loop_variant();
-
-        let loop_pred = &predecessors[&loop_head]
-            .iter()
-            .filter(|bb| !back_edges.contains(bb))
-            .collect::<Vec<_>>();
-
-        assert!(!loop_pred.is_empty());
-
-        let err_ctxt = |enc: &mut Encoder<'v, 'tcx>, stmt| {
-            enc.set_surrounding_error_context_for_statement(
-                stmt,
-                variant.position,
-                ErrorCtxt::LoopVariant,
-            )
-        };
-
-        let variant_expr = vir_high::Expression::local_no_pos(variant.var.clone());
-
-        // variant = expr
-        // loop {
-        //      assert(expr < variant)
-        //      assert(expr >= 0)
-        //      variant = expr;
-        // }
-
-        let assign_variant = |enc: &mut Encoder<'v, 'tcx>,
-                              block: &mut vir_high::BasicBlock|
-         -> SpannedEncodingResult<()> {
-            block.statements.push(err_ctxt(
-                enc,
-                vir_high::Statement::ghost_assign_no_pos(
-                    variant_expr.clone(),
-                    variant.spec.clone(),
-                ),
-            )?);
-            Ok(())
-        };
-
-        for bb in loop_pred.iter() {
-            let block = procedure.basic_blocks.get_mut(&bb).unwrap();
-            assign_variant(encoder, block)?;
+            invariant_stmts.push(statement);
         }
 
-        for bb in back_edges.iter() {
-            let block = procedure.basic_blocks.get_mut(&bb).unwrap();
+        if let Some(variant) = loop_invariant.variant {
+            let loop_pred = &predecessors[&loop_head]
+                .iter()
+                .filter(|bb| !back_edges.contains(bb))
+                .collect::<Vec<_>>();
 
-            let expr = vir_high::Expression::and(
-                vir_high::Expression::less_than(variant.spec.clone(), variant_expr.clone()),
-                vir_high::Expression::greater_equals(
-                    variant.spec.clone(),
-                    vir_high::Expression::constant_no_pos(
-                        vir_high::expression::ConstantValue::Int(0),
-                        variant.var.ty.clone(),
+            assert!(!loop_pred.is_empty());
+
+            let err_ctxt = |enc: &mut Encoder<'v, 'tcx>, stmt| {
+                enc.set_surrounding_error_context_for_statement(
+                    stmt,
+                    loop_invariant.position,
+                    ErrorCtxt::LoopVariant,
+                )
+            };
+
+            let variant_expr = vir_high::Expression::local_no_pos(variant.var.clone());
+
+            // variant = expr
+            // loop {
+            //      assert(expr < variant)
+            //      assert(expr >= 0)
+            //      variant = expr;
+            // }
+
+            let assign_variant = |enc: &mut Encoder<'v, 'tcx>,
+                                  block: &mut vir_high::BasicBlock|
+             -> SpannedEncodingResult<()> {
+                block.statements.push(err_ctxt(
+                    enc,
+                    vir_high::Statement::ghost_assign_no_pos(
+                        variant_expr.clone(),
+                        variant.expr.clone(),
                     ),
-                ),
-            );
-            let assert = err_ctxt(encoder, vir_high::Statement::assert_no_pos(expr))?;
-            block.statements.push(assert);
-            assign_variant(encoder, block)?;
+                )?);
+                Ok(())
+            };
+
+            for bb in loop_pred.iter() {
+                let block = procedure.basic_blocks.get_mut(&bb).unwrap();
+                assign_variant(encoder, block)?;
+            }
+
+            for bb in back_edges.iter() {
+                let block = procedure.basic_blocks.get_mut(&bb).unwrap();
+
+                block.statements.push(err_ctxt(
+                    encoder,
+                    vir_high::Statement::assert_no_pos(vir_high::Expression::less_than(
+                        variant.expr.clone(),
+                        variant_expr.clone(),
+                    )),
+                )?);
+                block.statements.push(err_ctxt(
+                    encoder,
+                    vir_high::Statement::assert_no_pos(vir_high::Expression::greater_equals(
+                        variant.expr.clone(),
+                        vir_high::Expression::constant_no_pos(
+                            vir_high::expression::ConstantValue::Int(0),
+                            variant.var.ty.clone(),
+                        ),
+                    )),
+                )?);
+                //let expr = vir_high::Expression::and(
+                //    vir_high::Expression::less_than(variant.expr.clone(), variant_expr.clone()),
+                //    vir_high::Expression::greater_equals(
+                //        variant.expr.clone(),
+                //        vir_high::Expression::constant_no_pos(
+                //            vir_high::expression::ConstantValue::Int(0),
+                //            variant.var.ty.clone(),
+                //        ),
+                //    ),
+                //);
+                //let assert = err_ctxt(encoder, vir_high::Statement::assert_no_pos(expr))?;
+                //block.statements.push(assert);
+                assign_variant(encoder, block)?;
+            }
         }
+        procedure
+            .basic_blocks
+            .get_mut(&invariant_block_id)
+            .unwrap()
+            .statements
+            .append(&mut invariant_stmts);
     }
     Ok(procedure)
 }
+
+//fn desugar_loop_variants<'v, 'tcx: 'v>(
+//    encoder: &mut Encoder<'v, 'tcx>,
+//    mut procedure: vir_high::ProcedureDecl,
+//) -> SpannedEncodingResult<vir_high::ProcedureDecl> {
+//    let mut predecessors = BTreeMap::new();
+//    for (bb, succ) in procedure.predecessors().into_iter() {
+//        predecessors.insert(
+//            bb.clone(),
+//            succ.into_iter()
+//                .cloned()
+//                .collect::<Vec<vir_high::BasicBlockId>>(),
+//        );
+//    }
+//    let predecessors = predecessors;
+//
+//    while let Some((bb, variant)) = find_loop_invariant(&procedure) {
+//        let loop_head = variant.loop_head.clone();
+//        let back_edges = variant.back_edges.clone();
+//
+//        let variant_block = procedure.basic_blocks.get_mut(&bb).unwrap();
+//        let variant_idx = variant_block
+//            .statements
+//            .iter()
+//            .position(|s| todo!("delete all of this"))
+//            .unwrap();
+//        let variant = variant_block.statements.remove(variant_idx);
+//
+//        let loop_pred = &predecessors[&loop_head]
+//            .iter()
+//            .filter(|bb| !back_edges.contains(bb))
+//            .collect::<Vec<_>>();
+//
+//        assert!(!loop_pred.is_empty());
+//
+//        let err_ctxt = |enc: &mut Encoder<'v, 'tcx>, stmt| {
+//            enc.set_surrounding_error_context_for_statement(
+//                stmt,
+//                loop_invariant.position,
+//                ErrorCtxt::LoopVariant,
+//            )
+//        };
+//
+//        let variant_expr = vir_high::Expression::local_no_pos(variant.var.clone());
+//
+//        // variant = expr
+//        // loop {
+//        //      assert(expr < variant)
+//        //      assert(expr >= 0)
+//        //      variant = expr;
+//        // }
+//
+//        let assign_variant = |enc: &mut Encoder<'v, 'tcx>,
+//                              block: &mut vir_high::BasicBlock|
+//         -> SpannedEncodingResult<()> {
+//            block.statements.push(err_ctxt(
+//                enc,
+//                vir_high::Statement::ghost_assign_no_pos(
+//                    variant_expr.clone(),
+//                    variant.expr.clone(),
+//                ),
+//            )?);
+//            Ok(())
+//        };
+//
+//        for bb in loop_pred.iter() {
+//            let block = procedure.basic_blocks.get_mut(&bb).unwrap();
+//            assign_variant(encoder, block)?;
+//        }
+//
+//        for bb in back_edges.iter() {
+//            let block = procedure.basic_blocks.get_mut(&bb).unwrap();
+//
+//            let expr = vir_high::Expression::and(
+//                vir_high::Expression::less_than(variant.spec.clone(), variant_expr.clone()),
+//                vir_high::Expression::greater_equals(
+//                    variant.spec.clone(),
+//                    vir_high::Expression::constant_no_pos(
+//                        vir_high::expression::ConstantValue::Int(0),
+//                        variant.var.ty.clone(),
+//                    ),
+//                ),
+//            );
+//            let assert = err_ctxt(encoder, vir_high::Statement::assert_no_pos(expr))?;
+//            block.statements.push(assert);
+//            assign_variant(encoder, block)?;
+//        }
+//    }
+//    Ok(procedure)
+//}
 
 fn find_loop_invariant(
     procedure: &vir_high::ProcedureDecl,
@@ -189,17 +285,6 @@ fn find_loop_invariant(
     for (bb, _, statement) in procedure.iter_statements() {
         if let vir_high::Statement::LoopInvariant(loop_invariant) = statement {
             return Some((bb.clone(), loop_invariant));
-        }
-    }
-    None
-}
-
-fn find_loop_variant(
-    procedure: &vir_high::ProcedureDecl,
-) -> Option<(vir_high::BasicBlockId, &vir_high::LoopVariant)> {
-    for (bb, _, statement) in procedure.iter_statements() {
-        if let vir_high::Statement::LoopVariant(loop_variant) = statement {
-            return Some((bb.clone(), loop_variant));
         }
     }
     None
