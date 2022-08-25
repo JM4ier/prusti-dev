@@ -102,6 +102,7 @@ pub fn desugar_loops<'v, 'tcx: 'v>(
         }
 
         if let Some(variant) = loop_invariant.variant {
+            // blocks preceding the loop that aren't back edges
             let loop_pred = &predecessors[&loop_head]
                 .iter()
                 .filter(|bb| !back_edges.contains(bb))
@@ -112,33 +113,33 @@ pub fn desugar_loops<'v, 'tcx: 'v>(
             let err_ctxt = |enc: &mut Encoder<'v, 'tcx>, stmt| {
                 enc.set_surrounding_error_context_for_statement(
                     stmt,
-                    loop_invariant.position,
+                    loop_invariant.position, // TODO(jonas) set the position to the variant which is currently not stored in the LoopInvariant struct
                     ErrorCtxt::LoopVariant,
                 )
             };
 
-            let variant_expr = vir_high::Expression::local_no_pos(variant.var.clone());
-
-            // variant = expr
+            // variant = expr               #1
             // loop {
-            //      assert(expr < variant)
-            //      assert(expr >= 0)
-            //      variant = expr;
+            //      assert(expr < variant)  #2
+            //      assert(expr >= 0)       #3
+            //      variant = expr;         #4
             // }
 
+            let variant_var = vir_high::Expression::local_no_pos(variant.var.clone());
             let assign_variant = |enc: &mut Encoder<'v, 'tcx>,
                                   block: &mut vir_high::BasicBlock|
              -> SpannedEncodingResult<()> {
                 block.statements.push(err_ctxt(
                     enc,
                     vir_high::Statement::ghost_assign_no_pos(
-                        variant_expr.clone(),
+                        variant_var.clone(),
                         variant.expr.clone(),
                     ),
                 )?);
                 Ok(())
             };
 
+            // initialize the variant before entering the loop (#1)
             for bb in loop_pred.iter() {
                 let block = procedure.basic_blocks.get_mut(&bb).unwrap();
                 assign_variant(encoder, block)?;
@@ -147,13 +148,16 @@ pub fn desugar_loops<'v, 'tcx: 'v>(
             for bb in back_edges.iter() {
                 let block = procedure.basic_blocks.get_mut(&bb).unwrap();
 
+                // #2
                 block.statements.push(err_ctxt(
                     encoder,
                     vir_high::Statement::assert_no_pos(vir_high::Expression::less_than(
                         variant.expr.clone(),
-                        variant_expr.clone(),
+                        variant_var.clone(),
                     )),
                 )?);
+
+                // #3
                 block.statements.push(err_ctxt(
                     encoder,
                     vir_high::Statement::assert_no_pos(vir_high::Expression::greater_equals(
@@ -176,6 +180,8 @@ pub fn desugar_loops<'v, 'tcx: 'v>(
                 //);
                 //let assert = err_ctxt(encoder, vir_high::Statement::assert_no_pos(expr))?;
                 //block.statements.push(assert);
+
+                // #4
                 assign_variant(encoder, block)?;
             }
         }

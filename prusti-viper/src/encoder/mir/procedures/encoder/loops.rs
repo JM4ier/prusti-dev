@@ -18,7 +18,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
         invariant_block: mir::BasicBlock,
         specification_blocks: Vec<mir::BasicBlock>,
     ) -> SpannedEncodingResult<vir_high::Statement> {
-        let location = mir::Location {
+        let invariant_location = mir::Location {
             block: invariant_block,
             statement_index: self.mir[invariant_block].statements.len(),
         };
@@ -70,11 +70,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 .map(|back_edge| self.encode_basic_block_label(*back_edge))
                 .collect()
         };
-        self.init_data.seek_before(location);
+        self.init_data.seek_before(invariant_location);
 
         // Encode permissions.
-        let initialized_places = self.initialization.get_after_statement(location);
-        let allocated_locals = self.allocation.get_after_statement(location);
+        let initialized_places = self.initialization.get_after_statement(invariant_location);
+        let allocated_locals = self.allocation.get_after_statement(invariant_location);
         let (written_places, mutably_borrowed_places, _) = self
             .procedure
             .loop_info()
@@ -102,10 +102,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
                 "loop_variant",
                 vir_high::Type::Int(vir_high::ty::Int::Unbounded),
             );
-            vir_high::ast::statement::LoopVariant {
-                var,
-                expr: spec,
-            }
+            vir_high::ast::statement::LoopVariant { var, expr: spec }
         });
 
         // Construct the invariant info.
@@ -116,8 +113,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
             encoded_invariant_specs,
             loop_variant,
         );
-        let invariant_statement =
-            self.set_statement_error(location, ErrorCtxt::UnexpectedStorageLive, loop_invariant)?;
+        let invariant_statement = self.set_statement_error(
+            invariant_location,
+            ErrorCtxt::UnexpectedStorageLive,
+            loop_invariant,
+        )?;
 
         Ok(invariant_statement)
     }
