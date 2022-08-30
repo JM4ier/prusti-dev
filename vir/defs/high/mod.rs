@@ -20,7 +20,7 @@ pub use self::{
         rvalue::{Operand, OperandKind, Rvalue},
         statement::{
             Assert, Assign, Assume, BorShorten, CloseFracRef, CloseMutRef, Comment, Consume,
-            CopyPlace, DeadInclusion, DeadLifetime, EndLft, Exhale, GhostAssign, Havoc, Inhale,
+            CopyPlace, DeadInclusion, DeadLifetime, EndLft, Exhale, GhostAssign, Havoc, GhostHavoc, Inhale,
             LeakAll, LifetimeReturn, LifetimeTake, LoopInvariant, MovePlace, NewLft,
             ObtainMutRef, OldLabel, OpenFracRef, OpenMutRef, SetUnionVariant, Statement,
             WriteAddress, WritePlace,

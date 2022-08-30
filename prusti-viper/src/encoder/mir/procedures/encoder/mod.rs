@@ -281,6 +281,15 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
     ) -> SpannedEncodingResult<()> {
         let called_fun = procedure_contract.def_id;
 
+        if !self.encoder.terminates(called_fun, Some(call_substs)) {
+            block_builder.add_statement(self.encoder.set_statement_error_ctxt(
+                vir_high::Statement::assert_no_pos(false.into()),
+                span,
+                ErrorCtxt::UnexpectedReachableCall,
+                self.def_id,
+            )?);
+        }
+
         if !self
             .encoder
             .env()
@@ -528,14 +537,13 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         procedure_builder.set_entry(entry_label);
         self.encode_specification_blocks()?;
         self.reachable_blocks.insert(self.mir.start_node());
-        let term = self.encode_termination()?;
         for (bb, data) in
             prusti_rustc_interface::middle::mir::traversal::reverse_postorder(self.mir)
         {
             if !self.specification_blocks.is_specification_block(bb)
                 && self.reachable_blocks.contains(&bb)
             {
-                self.encode_basic_block(procedure_builder, bb, data, term.contains(&bb))?;
+                self.encode_basic_block(procedure_builder, bb, data)?;
             }
         }
         assert!(
@@ -551,7 +559,6 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         procedure_builder: &mut ProcedureBuilder,
         bb: mir::BasicBlock,
         data: &mir::BasicBlockData<'tcx>,
-        unreachable: bool,
     ) -> SpannedEncodingResult<()> {
         self.derived_lifetimes_yet_to_kill.clear();
         self.reborrow_lifetimes_to_remove_for_block
@@ -560,17 +567,6 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         self.current_basic_block = Some(bb);
         let label = self.encode_basic_block_label(bb);
         let mut block_builder = procedure_builder.create_basic_block_builder(label);
-        if unreachable {
-            // at the moment these assert(false) are generated for blocks where termination is needed but is not proven by variants etc
-            // i.e. if these blocks are reachable it violates the termination constraint
-            let assert = self.encoder.set_statement_error_ctxt(
-                vir_high::Statement::assert_no_pos(false.into()),
-                data.terminator().source_info.span, // is this the right location to report the error?
-                ErrorCtxt::TerminationUnexpectedReachable,
-                self.def_id,
-            )?;
-            block_builder.add_statement(assert);
-        }
         let mir::BasicBlockData {
             statements,
             terminator,
@@ -634,6 +630,16 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             self.encode_terminator(&mut block_builder, location, terminator)?;
         }
         if let Some(statement) = self.loop_invariant_encoding.remove(&bb) {
+            if self.needs_termination(bb)
+                && !statement.clone().unwrap_loop_invariant().variant.is_some()
+            {
+                block_builder.add_statement(self.encoder.set_statement_error_ctxt(
+                    vir_high::Statement::assert_no_pos(false.into()),
+                    data.terminator().source_info.span,
+                    ErrorCtxt::UnexpectedReachableLoop,
+                    self.def_id,
+                )?);
+            }
             block_builder.add_statement(statement);
         }
         block_builder.build();

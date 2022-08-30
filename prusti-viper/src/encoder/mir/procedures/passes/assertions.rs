@@ -37,6 +37,7 @@ pub(in super::super) fn propagate_assertions_back<'v, 'tcx: 'v>(
                         | vir_high::Statement::Exhale(_)
                         | vir_high::Statement::Consume(_)
                         | vir_high::Statement::Havoc(_)
+                        | vir_high::Statement::GhostHavoc(_)
                         | vir_high::Statement::Assert(_)
                         | vir_high::Statement::MovePlace(_)
                         | vir_high::Statement::CopyPlace(_)

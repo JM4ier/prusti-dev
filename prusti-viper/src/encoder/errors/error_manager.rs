@@ -57,11 +57,15 @@ pub enum ErrorCtxt {
     ExhaleMethodPostcondition,
     /// A generic loop invariant error.
     LoopInvariant,
-    /// A generic loop variant error.
-    LoopVariant,
     /// A Viper `exhale expr` that exhales the permissions of a loop invariant `expr`
     ExhaleLoopInvariantOnEntry,
     ExhaleLoopInvariantAfterIteration,
+    /// A generic loop variant error.
+    LoopVariant,
+    /// Loop Variant doesn't hold on entry or after iteration
+    LoopVariantOnEntry,
+    LoopVariantAfterIteration,
+    LoopVariantNonDecreased,
     /// A Viper `assert expr` that asserts the functional specification of a loop invariant `expr`
     AssertLoopInvariantOnEntry,
     AssertLoopInvariantAfterIteration,
@@ -157,8 +161,10 @@ pub enum ErrorCtxt {
     /// The state that fold-unfold algorithm deduced as unreachable, is actually
     /// reachable.
     UnreachableFoldingState,
-    /// If termination of a block isn't proven (but needs to), this is the error if the block is actually reached
-    TerminationUnexpectedReachable,
+    /// If a loop needs to terminate and no loop variant is provided
+    UnexpectedReachableLoop,
+    /// If a call needs to terminate and it does not necessarily terminate
+    UnexpectedReachableCall,
     /// Termination measure of a call isn't lower, or a function is called when entered with termination measure 0
     CallTermination,
     /// Finding the value of the termination measure at the begin of a method unexpectedly caused an error
@@ -650,16 +656,42 @@ impl<'tcx> ErrorManager<'tcx> {
                 ).set_failing_assertion(opt_cause_span)
             }
 
-            ("assert.failed:assertion.false", ErrorCtxt::TerminationUnexpectedReachable) => {
+            ("assert.failed:assertion.false", ErrorCtxt::UnexpectedReachableLoop) => {
                 PrustiError::verification(
-                    "the code might not terminate".to_string(),
+                    "this loop might not terminate, and it needs to".to_string(),
                     error_span
-                )
+                ).set_help("Consider attaching a loop variant at the begin of the loop with the `body_variant!` macro.")
+            }
+
+            ("assert.failed:assertion.false", ErrorCtxt::UnexpectedReachableCall) => {
+                PrustiError::verification(
+                    "this function call might not terminate, and it needs to".to_string(),
+                    error_span
+                ).set_help("Consider marking the called function with `#[terminates]` or making it `#[pure]`")
             }
 
             ("assert.failed:assertion.false", ErrorCtxt::CallTermination) => {
                 PrustiError::verification(
                     "the termination measure of this call is not necessarily lower".to_string(),
+                    error_span
+                )
+            }
+
+            ("assert.failed:assertion.false", ErrorCtxt::LoopVariantOnEntry) => {
+                PrustiError::verification(
+                    "The loop variant might not hold on entry (is lower or equal to zero)".to_string(),
+                    error_span
+                )
+            }
+            ("assert.failed:assertion.false", ErrorCtxt::LoopVariantNonDecreased) => {
+                PrustiError::verification(
+                    "The loop variant might not have decreased".to_string(),
+                    error_span
+                )
+            }
+            ("assert.failed:assertion.false", ErrorCtxt::LoopVariantAfterIteration) => {
+                PrustiError::verification(
+                    "The loop variant might go below zero while the loop continues".to_string(),
                     error_span
                 )
             }

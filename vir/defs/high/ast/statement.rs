@@ -21,6 +21,7 @@ pub enum Statement {
     Exhale(Exhale),
     Consume(Consume),
     Havoc(Havoc),
+    GhostHavoc(GhostHavoc),
     Assume(Assume),
     Assert(Assert),
     LoopInvariant(LoopInvariant),
@@ -83,6 +84,12 @@ pub struct Consume {
 /// Havoc the permission denoted by the place.
 pub struct Havoc {
     pub predicate: Predicate,
+    pub position: Position,
+}
+
+#[display(fmt = "ghost-havoc {}", variable)]
+pub struct GhostHavoc {
+    pub variable: VariableDecl,
     pub position: Position,
 }
 

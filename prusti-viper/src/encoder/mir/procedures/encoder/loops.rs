@@ -8,7 +8,7 @@ use crate::encoder::{
 };
 use prusti_interface::specs::typed::LoopSpecification;
 use prusti_rustc_interface::middle::mir;
-use vir_crate::high::{self as vir_high, BasicBlockId, Position};
+use vir_crate::high::{self as vir_high, BasicBlockId};
 
 impl<'p, 'v: 'p, 'tcx: 'v> super::ProcedureEncoder<'p, 'v, 'tcx> {
     /// Encode loop invariant and loop variants

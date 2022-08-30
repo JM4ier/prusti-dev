@@ -55,6 +55,9 @@ impl CollectPermissionChanges for vir_high::Statement {
             vir_high::Statement::Havoc(statement) => {
                 statement.collect(encoder, consumed_permissions, produced_permissions)
             }
+            vir_high::Statement::GhostHavoc(statement) => {
+                statement.collect(encoder, consumed_permissions, produced_permissions)
+            }
             vir_high::Statement::Assume(statement) => {
                 statement.collect(encoder, consumed_permissions, produced_permissions)
             }
@@ -218,6 +221,18 @@ impl CollectPermissionChanges for vir_high::Havoc {
     ) -> SpannedEncodingResult<()> {
         consumed_permissions.extend(extract_managed_predicate_place(&self.predicate)?);
         produced_permissions.extend(extract_managed_predicate_place(&self.predicate)?);
+        Ok(())
+    }
+}
+
+impl CollectPermissionChanges for vir_high::GhostHavoc {
+    fn collect<'v, 'tcx>(
+        &self,
+        _encoder: &mut Encoder<'v, 'tcx>,
+        _consumed_permissions: &mut Vec<Permission>,
+        _produced_permissions: &mut Vec<Permission>,
+    ) -> SpannedEncodingResult<()> {
+        // TODO(jonas) is this correct?
         Ok(())
     }
 }
