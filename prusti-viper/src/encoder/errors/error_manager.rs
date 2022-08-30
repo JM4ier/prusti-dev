@@ -658,16 +658,16 @@ impl<'tcx> ErrorManager<'tcx> {
 
             ("assert.failed:assertion.false", ErrorCtxt::UnexpectedReachableLoop) => {
                 PrustiError::verification(
-                    "this loop might not terminate, and it needs to".to_string(),
+                    "this loop might not terminate".to_string(),
                     error_span
-                ).set_help("Consider attaching a loop variant at the begin of the loop with the `body_variant!` macro.")
+                ).set_help("Consider attaching a loop variant at the begin of the loop with the `body_variant!` macro.\nAlternatively, remove the `#[terminates] attribute of this function, in case this is not within a ghost block.")
             }
 
             ("assert.failed:assertion.false", ErrorCtxt::UnexpectedReachableCall) => {
                 PrustiError::verification(
-                    "this function call might not terminate, and it needs to".to_string(),
+                    "this function call might not terminate".to_string(),
                     error_span
-                ).set_help("Consider marking the called function with `#[terminates]` or making it `#[pure]`")
+                ).set_help("Consider marking the called function with `#[terminates]` or making it `#[pure]`\nAlternatively, remove the `#[terminates] attribute of this function.")
             }
 
             ("assert.failed:assertion.false", ErrorCtxt::CallTermination) => {
