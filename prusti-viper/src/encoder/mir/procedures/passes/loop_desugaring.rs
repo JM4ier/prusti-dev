@@ -59,7 +59,7 @@ pub fn desugar_loops<'v, 'tcx: 'v>(
                     vir_high::Expression::local_no_pos(variant.var.clone()),
                     variant.expr.clone(),
                 ),
-                loop_invariant.position, // TODO(jonas),
+                loop_invariant.position,
                 ErrorCtxt::LoopVariant,
             )?;
             invariant_block.statements.push(stmt);
@@ -83,7 +83,7 @@ pub fn desugar_loops<'v, 'tcx: 'v>(
                         variant.var.ty.clone(),
                     ),
                 )),
-                loop_invariant.position, // TODO(jonas),
+                loop_invariant.position,
                 ErrorCtxt::LoopVariantOnEntry,
             )?;
             invariant_block.statements.push(stmt);
@@ -104,7 +104,7 @@ pub fn desugar_loops<'v, 'tcx: 'v>(
         if let Some(variant) = &loop_invariant.variant {
             let stmt = encoder.set_surrounding_error_context_for_statement(
                 vir_high::Statement::ghost_havoc_no_pos(variant.var.clone()),
-                loop_invariant.position, // TODO(jonas),
+                loop_invariant.position,
                 ErrorCtxt::LoopVariant,
             )?;
             invariant_block.statements.push(stmt);
@@ -125,7 +125,7 @@ pub fn desugar_loops<'v, 'tcx: 'v>(
                     vir_high::Expression::local_no_pos(variant.var.clone()),
                     variant.expr.clone(),
                 )),
-                loop_invariant.position, // TODO(jonas),
+                loop_invariant.position,
                 ErrorCtxt::LoopVariant,
             )?;
             invariant_block.statements.push(stmt);
@@ -194,7 +194,6 @@ fn duplicate_blocks<'v, 'tcx: 'v>(
                 )?;
                 block.statements.push(statement);
             }
-            // TODO(jonas) simplify
             if let Some(variant) = &loop_invariant.variant {
                 block
                     .statements
@@ -203,7 +202,7 @@ fn duplicate_blocks<'v, 'tcx: 'v>(
                             variant.expr.clone(),
                             vir_high::Expression::local_no_pos(variant.var.clone()),
                         )),
-                        loop_invariant.position, // TODO(jonas)
+                        loop_invariant.position,
                         ErrorCtxt::LoopVariantNonDecreased,
                     )?);
 
@@ -217,7 +216,7 @@ fn duplicate_blocks<'v, 'tcx: 'v>(
                                 variant.var.ty.clone(),
                             ),
                         )),
-                        loop_invariant.position, // TODO(jonas)
+                        loop_invariant.position,
                         ErrorCtxt::LoopVariantAfterIteration,
                     )?);
             }

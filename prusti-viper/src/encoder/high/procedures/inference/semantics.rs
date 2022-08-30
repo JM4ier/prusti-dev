@@ -232,7 +232,6 @@ impl CollectPermissionChanges for vir_high::GhostHavoc {
         _consumed_permissions: &mut Vec<Permission>,
         _produced_permissions: &mut Vec<Permission>,
     ) -> SpannedEncodingResult<()> {
-        // TODO(jonas) is this correct?
         Ok(())
     }
 }

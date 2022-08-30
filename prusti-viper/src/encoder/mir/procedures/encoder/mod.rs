@@ -163,10 +163,11 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
             self.encode_functional_specifications()?;
         let (assume_lifetime_preconditions, assert_lifetime_postconditions) =
             self.encode_lifetime_specifications()?;
+        let termination_initialization = self.encode_termnination_initialization()?;
         let mut pre_statements = assume_lifetime_preconditions;
         pre_statements.extend(allocate_parameters);
         pre_statements.extend(assume_preconditions);
-        // TODO(jonas) append termination var intialization here
+        pre_statements.extend(termination_initialization);
         pre_statements.extend(allocate_returns);
         let mut post_statements = assert_postconditions;
         post_statements.extend(deallocate_parameters);
@@ -407,6 +408,35 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         Ok(postconditions)
     }
 
+    fn encode_termnination_initialization(
+        &mut self,
+    ) -> SpannedEncodingResult<Vec<vir_high::Statement>> {
+        if self.encoder.terminates(self.def_id, None) {
+            let termination_expr = self.encode_termination_expression(
+                &procedure_contract,
+                mir_span,
+                substs,
+                &arguments,
+            )?;
+            let term_var = self.fresh_ghost_variable(
+                "termination_var",
+                vir_high::Type::Int(vir_high::ty::Int::Unbounded),
+            );
+            self.termination_variable = Some(term_var.clone());
+            let assign_stmt =
+                vir_high::Statement::ghost_assign_no_pos(term_var.into(), termination_expr);
+            let assign_stmt = self.encoder.set_statement_error_ctxt(
+                assign_stmt,
+                mir_span,
+                ErrorCtxt::UnexpectedAssignMethodTerminationMeasure,
+                self.def_id,
+            )?;
+            vec![assign_stmt]
+        } else {
+            vec![]
+        }
+    }
+
     fn encode_functional_specifications(
         &mut self,
     ) -> SpannedEncodingResult<(Vec<vir_high::Statement>, Vec<vir_high::Statement>)> {
@@ -434,30 +464,6 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 self.def_id,
             )?;
             preconditions.push(assume_statement);
-        }
-
-        if self.encoder.terminates(self.def_id, None) {
-            let termination_expr = self.encode_termination_expression(
-                &procedure_contract,
-                mir_span,
-                substs,
-                &arguments,
-            )?;
-            let term_var = self.fresh_ghost_variable(
-                "termination_var",
-                vir_high::Type::Int(vir_high::ty::Int::Unbounded),
-            );
-            self.termination_variable = Some(term_var.clone());
-            let assign_stmt =
-                vir_high::Statement::ghost_assign_no_pos(term_var.into(), termination_expr);
-            let assign_stmt = self.encoder.set_statement_error_ctxt(
-                assign_stmt,
-                mir_span,
-                ErrorCtxt::UnexpectedAssignMethodTerminationMeasure,
-                self.def_id,
-            )?;
-            // TODO(jonas) don't push this to preconditions maybe
-            preconditions.push(assign_stmt);
         }
 
         let old_label = self.encoder.set_statement_error_ctxt(
@@ -1779,7 +1785,6 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                     //
                     // FIXME: This is not enough, we also need to handle
                     // mutual-recursion case.
-                    // TODO(jonas)
                     let (function_name, return_type) = self
                         .encoder
                         .encode_pure_function_use_high(called_def_id, self.def_id, call_substs)
