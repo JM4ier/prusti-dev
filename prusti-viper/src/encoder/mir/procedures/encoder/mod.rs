@@ -411,6 +411,17 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
     fn encode_termnination_initialization(
         &mut self,
     ) -> SpannedEncodingResult<Vec<vir_high::Statement>> {
+        let mir_span = self.mir.span;
+        let substs = self.encoder.env().identity_substs(self.def_id);
+        // Retrieve the contract
+        let procedure_contract = self
+            .encoder
+            .get_mir_procedure_contract_for_def(self.def_id, substs)
+            .with_span(mir_span)?;
+        let mut arguments: Vec<vir_high::Expression> = Vec::new();
+        for local in self.mir.args_iter() {
+            arguments.push(self.encode_local(local)?.into());
+        }
         if self.encoder.terminates(self.def_id, None) {
             let termination_expr = self.encode_termination_expression(
                 &procedure_contract,
@@ -431,9 +442,9 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 ErrorCtxt::UnexpectedAssignMethodTerminationMeasure,
                 self.def_id,
             )?;
-            vec![assign_stmt]
+            Ok(vec![assign_stmt])
         } else {
-            vec![]
+            Ok(vec![])
         }
     }
 
