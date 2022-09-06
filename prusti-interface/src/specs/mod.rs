@@ -63,6 +63,7 @@ pub struct SpecCollector<'a, 'tcx> {
     /// Map from functions/loops/types to their specifications.
     procedure_specs: HashMap<LocalDefId, ProcedureSpecRefs>,
     loop_specs: Vec<LocalDefId>,
+    loop_variants: Vec<LocalDefId>,
     type_specs: HashMap<LocalDefId, TypeSpecRefs>,
     prusti_assertions: Vec<LocalDefId>,
     prusti_assumptions: Vec<LocalDefId>,
@@ -78,6 +79,7 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
             spec_functions: HashMap::new(),
             procedure_specs: HashMap::new(),
             loop_specs: vec![],
+            loop_variants: vec![],
             type_specs: HashMap::new(),
             prusti_assertions: vec![],
             prusti_assumptions: vec![],
@@ -139,6 +141,9 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
                             self.spec_functions.get(spec_id).unwrap().to_def_id(),
                         ));
                     }
+                    SpecIdRef::Terminates(spec_id) => {
+                        spec.set_terminates(*self.spec_functions.get(spec_id).unwrap());
+                    }
                 }
             }
 
@@ -198,9 +203,13 @@ impl<'a, 'tcx> SpecCollector<'a, 'tcx> {
         for local_id in self.loop_specs.iter() {
             def_spec.loop_specs.insert(
                 local_id.to_def_id(),
-                typed::LoopSpecification {
-                    invariant: *local_id,
-                },
+                typed::LoopSpecification::Invariant(*local_id),
+            );
+        }
+        for local_id in self.loop_variants.iter() {
+            def_spec.loop_specs.insert(
+                local_id.to_def_id(),
+                typed::LoopSpecification::Variant(*local_id),
             );
         }
     }
@@ -302,6 +311,11 @@ fn get_procedure_spec_ids(def_id: DefId, attrs: &[ast::Attribute]) -> Option<Pro
             .map(|raw_spec_id| SpecIdRef::Postcondition(parse_spec_id(raw_spec_id, def_id))),
     );
     spec_id_refs.extend(
+        read_prusti_attrs("terminates_spec_id_ref", attrs)
+            .into_iter()
+            .map(|raw_spec_id| SpecIdRef::Terminates(parse_spec_id(raw_spec_id, def_id))),
+    );
+    spec_id_refs.extend(
         // TODO: pledges with LHS that is not "result" would need to carry the
         // LHS expression through typing
         read_prusti_attrs("pledge_spec_id_ref", attrs)
@@ -393,6 +407,9 @@ impl<'a, 'tcx> intravisit::Visitor<'tcx> for SpecCollector<'a, 'tcx> {
             // Collect loop specifications
             if has_prusti_attr(attrs, "loop_body_invariant_spec") {
                 self.loop_specs.push(local_id);
+            }
+            if has_prusti_attr(attrs, "loop_body_variant_spec") {
+                self.loop_variants.push(local_id);
             }
 
             // TODO: (invariants and trusted flag) visit the struct itself?
