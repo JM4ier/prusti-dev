@@ -373,14 +373,14 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         }
 
         let call_expr =
-            self.encode_termination_expression(&procedure_contract, span, call_substs, &arguments)?;
+            self.encode_termination_expression(procedure_contract, span, call_substs, arguments)?;
 
         let term_var = self.termination_variable.clone().unwrap();
         let term_ty = vir_high::Type::Int(vir_high::ty::Int::Unbounded);
         let zero = vir_high::Expression::constant_no_pos(0.into(), term_ty);
         let cond = vir_high::Expression::and(
             vir_high::Expression::greater_than(term_var.clone().into(), zero),
-            vir_high::Expression::greater_than(term_var.clone().into(), call_expr),
+            vir_high::Expression::greater_than(term_var.into(), call_expr),
         );
 
         let assert_statement = self.encoder.set_statement_error_ctxt(
@@ -412,14 +412,14 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
                 )
             })?;
 
-        Ok(self.encoder.encode_assertion_high(
+        self.encoder.encode_assertion_high(
             expr.to_def_id(),
             None,
             arguments,
             None,
             self.def_id,
             expr_substs,
-        )?)
+        )
     }
 
     fn encode_precondition_expressions(
@@ -685,7 +685,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         }
         if let Some(statement) = self.loop_invariant_encoding.remove(&bb) {
             if self.needs_termination(bb)
-                && !statement.clone().unwrap_loop_invariant().variant.is_some()
+                && statement.clone().unwrap_loop_invariant().variant.is_none()
             {
                 block_builder.add_statement(self.encoder.set_statement_error_ctxt(
                     vir_high::Statement::assert_no_pos(false.into()),

@@ -81,6 +81,11 @@ pub fn ghost_constraint(_attr: TokenStream, tokens: TokenStream) -> TokenStream 
     tokens
 }
 
+#[proc_macro_attribute]
+pub fn terminates(_attr: TokenStream, _tokens: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
 #[proc_macro]
 pub fn ghost(_tokens: TokenStream) -> TokenStream {
     TokenStream::new()
