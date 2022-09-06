@@ -78,6 +78,9 @@ impl DefSpecificationMap {
                 if let Some(posts) = spec.posts.extract_with_selective_replacement() {
                     specs.extend(posts);
                 }
+                if let Some(Some(term)) = spec.terminates.extract_with_selective_replacement() {
+                    specs.push(term.to_def_id());
+                }
                 if let Some(pledges) = spec.pledges.extract_with_selective_replacement() {
                     specs.extend(pledges.iter().filter_map(|pledge| pledge.lhs));
                     specs.extend(pledges.iter().map(|pledge| pledge.rhs));

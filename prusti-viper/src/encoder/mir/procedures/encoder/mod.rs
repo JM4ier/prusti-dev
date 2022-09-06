@@ -184,7 +184,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         };
         let (assume_lifetime_preconditions, assert_lifetime_postconditions) =
             self.encode_lifetime_specifications()?;
-        let termination_initialization = self.encode_termnination_initialization()?;
+        let termination_initialization = self.encode_termination_initialization()?;
         let mut pre_statements = assume_lifetime_preconditions;
         pre_statements.extend(allocate_parameters);
         pre_statements.extend(assume_preconditions);
@@ -304,7 +304,7 @@ impl<'p, 'v: 'p, 'tcx: 'v> ProcedureEncoder<'p, 'v, 'tcx> {
         ))
     }
 
-    fn encode_termnination_initialization(
+    fn encode_termination_initialization(
         &mut self,
     ) -> SpannedEncodingResult<Vec<vir_high::Statement>> {
         let mir_span = self.mir.span;
