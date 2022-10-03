@@ -7,11 +7,12 @@ import json
 def mean(list):
     return sum(list) / len(list)
 
-bench_out = os.path.join("benchmark-output")
-json_files = [ os.path.join(bench_out, f) for f in os.listdir(bench_out) if f.endswith("json") ]
+bench_out = 'benchmark-output'
+json_files = [ os.path.join(bench_out, f) for f in os.listdir(bench_out) if f.endswith('json') ]
 json_file = max(json_files, key = os.path.getctime)
 
 print(f'Analyzing data from `{json_file}')
+print()
 
 with open(json_file, 'r') as f:
     data = json.load(f)
@@ -19,8 +20,9 @@ with open(json_file, 'r') as f:
 for key in data:
     if key.endswith('ref.rs'):
         continue
-    test_name = key.removeprefix('prusti-tests/tests/verify/pass/')
-    ref = key.removesuffix('.rs') + '_ref.rs'
+
+    test_name = key.split('/')[-1]
+    ref = key.replace('.rs', '_ref.rs')
 
     new_data = data[key]
     ref_data = data[ref]
@@ -33,4 +35,9 @@ for key in data:
 
     test = scipy.stats.ttest_ind(new_data, ref_data, equal_var=False, alternative='two-sided')
 
-    print(f'analyzing `{test_name}`\n  {change_100:.1f}% change in runtime, p-value = {test.pvalue:.5f}\n')
+    print(f'analyzing {test_name}')
+    print(f'  {change_100:+05.1f}% in runtime')
+    print(f'  {test.pvalue:.4f} p-value')
+    print()
+
+print('Note: p-value refers to the Null-Hypothesis being that the measurements are equal')
