@@ -1,0 +1,12 @@
+prusti-tests/tests/verify/pass/assert.rs
+prusti-tests/tests/verify/pass/assert_ref.rs
+prusti-tests/tests/verify/pass/ghost_code.rs
+prusti-tests/tests/verify/pass/ghost_code_ref.rs
+prusti-tests/tests/verify/pass/loop_termination.rs
+prusti-tests/tests/verify/pass/loop_termination_ref.rs
+prusti-tests/tests/verify/pass/fn_term.rs
+prusti-tests/tests/verify/pass/fn_term_ref.rs
+prusti-tests/tests/verify/pass/ghost_var.rs
+prusti-tests/tests/verify/pass/ghost_var_ref.rs
+prusti-tests/tests/verify/pass/fn_assert.rs
+prusti-tests/tests/verify/pass/fn_assert_ref.rs
