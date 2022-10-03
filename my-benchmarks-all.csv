@@ -1,3 +1,5 @@
+prusti-tests/tests/verify_overflow/pass/arrays_assert.rs
+prusti-tests/tests/verify_overflow/pass/arrays_assert_ref.rs
 prusti-tests/tests/verify/pass/assert.rs
 prusti-tests/tests/verify/pass/assert_ref.rs
 prusti-tests/tests/verify/pass/ghost_code.rs
