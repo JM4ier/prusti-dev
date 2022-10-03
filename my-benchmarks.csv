@@ -1,0 +1,9 @@
+prusti-tests/tests/verify/pass/arrays2.rs
+prusti-tests/tests/verify/pass/simple_prusti_assert.rs
+prusti-tests/tests/verify/pass/simple_assert.rs
+prusti-tests/tests/verify/pass/ghost_code.rs
+prusti-tests/tests/verify/pass/real_code.rs
+prusti-tests/tests/verify/pass/loop_termination.rs
+prusti-tests/tests/verify/pass/loop_termination_ref.rs
+prusti-tests/tests/verify/pass/fn_term.rs
+prusti-tests/tests/verify/pass/fn_term_ref.rs
